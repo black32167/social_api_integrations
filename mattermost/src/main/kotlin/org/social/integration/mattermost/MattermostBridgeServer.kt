@@ -23,10 +23,11 @@ class MattermostBridgeServer(val baseUri: String) {
     // TODO: parameterize
     val mmUrl = "http://localhost:8065/api/v4"
     val targetFactory = WebTargetFactory(mmUrl)
+    val httpService = ApiHttpService(targetFactory)
     fun resources() = arrayOf<Any>(
-            MessageApiResource(MattermostMessageService(targetFactory)),
-            UserApiResource(MattermostUserService(targetFactory)),
-            AuthApiResource(MattermostAuthService(targetFactory)),
+            MessageApiResource(MattermostMessageService(httpService)),
+            UserApiResource(MattermostUserService(httpService)),
+            AuthApiResource(MattermostAuthService(httpService)),
             WebApplicationExceptionMapper()
     )
 

@@ -2,7 +2,6 @@ package org.social.integration.mattermost
 
 import org.glassfish.jersey.client.ClientConfig
 import org.social.integration.mattermost.filter.ClientAuthFilter
-import org.social.integration.mattermost.filter.StatusCodeFilter
 import java.net.URI
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
@@ -13,8 +12,7 @@ class WebTargetFactory(mmURL:String) {
 
     private fun buildClient(mmURL: String): Client =
         ClientBuilder.newClient(ClientConfig(
-                ClientAuthFilter(),
-                StatusCodeFilter()))
+                ClientAuthFilter()))
 
     private val baseTarget = client.target(URI.create(mmURL))
 

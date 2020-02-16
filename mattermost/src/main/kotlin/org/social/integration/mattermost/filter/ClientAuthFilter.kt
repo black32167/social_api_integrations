@@ -9,7 +9,7 @@ class ClientAuthFilter: ClientRequestFilter {
     override fun filter(requestContext: ClientRequestContext) {
         val auth = ApiAuthContext.getAuth()
         val bearerAuth = auth?.takeIf { it is BearerAuth } as BearerAuth?
-        val bearer = bearerAuth?.bearerToken?.also { bearerToken->
+        bearerAuth?.bearerToken?.also { bearerToken->
             requestContext.headers.add("Authorization", "Bearer ${bearerToken}")
         }
     }

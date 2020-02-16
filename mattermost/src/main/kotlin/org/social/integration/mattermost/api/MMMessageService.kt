@@ -1,7 +1,7 @@
 package org.social.integration.mattermost.api
 
 import org.social.integration.mattermost.ApiHttpService
-import org.social.integration.mattermost.dto.DirectChannelCreatedResponse
+import org.social.integration.mattermost.dto.MMChannelCreatedResponse
 import org.social.integration.mattermost.dto.MMPostRequest
 import org.social.integration.mattermost.dto.MMPostResponse
 import org.social.integration.mattermost.service.user.MMUserApi
@@ -22,7 +22,7 @@ class MMMessageService(private val httpClient: ApiHttpService) : MessageApiServi
         val channel = httpClient.postArray(
                 "channels/direct",
                 arrayOf(sender.id, recipient.id),
-                DirectChannelCreatedResponse::class.java)
+                MMChannelCreatedResponse::class.java)
         val mmMessage = httpClient.post(
                 "posts",
                 MMPostRequest(channel.id, message.messageBody!!),

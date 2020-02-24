@@ -1,6 +1,6 @@
 package org.social.integration.mattermost.dto
 
-class MMChannelCreatedResponse(
+class MMChannelResponse(
         val id:String,
         val create_at:Long,
         val update_at:Long,

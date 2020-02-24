@@ -8,5 +8,12 @@ class MMUserApi(private val httpClient: ApiHttpService) {
         httpClient.postArray("/users/usernames", arrayOf(userName), Array<UserResponseItem>::class.java)
                 .takeIf { it.isNotEmpty() }
                 ?.let { it[0] }
-                ?: throw NotFoundException("User not found: ${userName}")
+                ?: throw NotFoundException("User not found by name: ${userName}")
+
+    fun getUserById(userId: String): UserResponseItem =
+            httpClient.postArray("/users/ids", arrayOf(userId), Array<UserResponseItem>::class.java)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { it[0] }
+                    ?: throw NotFoundException("User not found by id: ${userId}")
+
 }

@@ -29,4 +29,20 @@ class MattermostIT {
                 .messageBody("Hello"))
         assertNotNull(message.id)
     }
+
+    @Test
+    fun testOutgoing() {
+        var auth = authApi.authenticateUser(UserAuthenticationRequest()
+                .userName("test")
+                .password("123456"))
+        assertNotNull(auth)
+
+        val messageClient = ApiClient().setBasePath(DEFAULT_BASE_URL)
+        val messageApi = MessageApi(messageClient)
+        messageClient.setBearerToken(auth.token)
+
+        val messages = messageApi.getOutgoingMessages()
+
+        assertNotNull(messages)
+    }
 }

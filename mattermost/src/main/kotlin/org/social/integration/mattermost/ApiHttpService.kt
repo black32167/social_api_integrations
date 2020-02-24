@@ -25,4 +25,20 @@ class ApiHttpService(val targetFactory:WebTargetFactory) {
 
     fun request(path:String)
             = targetFactory.getTarget(path).request(MediaType.APPLICATION_JSON)
+
+    fun getString(path: String): String {
+        return getResponse(path).readEntity(String::class.java)
+    }
+
+    fun <T> get(path: String, responsePayloadClass: Class<T>): T {
+        return getResponse(path).readEntity(responsePayloadClass)
+    }
+
+    fun getResponse(path:String): Response {
+        val resp = request(path).get()
+        if(resp.status >= 400) {
+            throw WebApplicationException(resp)
+        }
+        return resp
+    }
 }

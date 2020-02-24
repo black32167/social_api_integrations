@@ -14,8 +14,8 @@ class MMPostResponse(
         val original_id:String,
         val message:String,
         val type:String,
-        val props:Map<String, String>,
+        val props:Map<String, Any>,
         val hashtags:String,
         val pending_post_id:String,
-        val metadata:Map<String, String>
+        val metadata:Map<String, Any>
 )

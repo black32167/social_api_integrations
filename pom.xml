@@ -8,6 +8,8 @@
     <version>1.0.0</version>
     <modules>
         <module>mattermost</module>
+        <module>birdview</module>
+        <module>integration_tools</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -51,6 +53,16 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>5.2.5.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>social.api.integration</groupId>
+                <artifactId>integration_tools</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>social.api.integration</groupId>
                 <artifactId>jax-rs-server</artifactId>
                 <version>${social.api.tools.version}</version>
@@ -85,6 +97,11 @@
                 <artifactId>auth-server</artifactId>
                 <version>${social.api.version}</version>
             </dependency>
+            <dependency>
+                <groupId>social.api</groupId>
+                <artifactId>task-server</artifactId>
+                <version>${social.api.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -106,6 +123,11 @@
                 <groupId>org.glassfish.hk2</groupId>
                 <artifactId>hk2</artifactId>
                 <version>2.5.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.inject</groupId>
+                <artifactId>jersey-hk2</artifactId>
+                <version>${jersey.version}</version>
             </dependency>
 
             <dependency>

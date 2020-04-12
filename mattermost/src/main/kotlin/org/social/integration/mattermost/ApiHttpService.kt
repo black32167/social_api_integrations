@@ -1,11 +1,12 @@
 package org.social.integration.mattermost
 
+import org.social.integrations.tools.WebTargetFactory
 import javax.ws.rs.WebApplicationException
 import javax.ws.rs.client.Entity
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-class ApiHttpService(val targetFactory:WebTargetFactory) {
+class ApiHttpService(val targetFactory: WebTargetFactory) {
     fun <T> post(path:String, payload:Any, responsePayloadClass: Class<T>): T
             = postEntity(path, Entity.json(payload)).readEntity(responsePayloadClass)
 

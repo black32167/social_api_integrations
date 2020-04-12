@@ -7,9 +7,11 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.social.integration.mattermost.api.MMAuthService
 import org.social.integration.mattermost.api.MMMessageService
 import org.social.integration.mattermost.api.MMUserService
+import org.social.integrations.tools.WebTargetFactory
 import social.api.auth.server.AuthApiResource
 import social.api.message.server.MessageApiResource
 import social.api.server.JaxRsServer
+import social.api.server.auth.ApiAuthContext
 import social.api.user.server.UserApiResource
 import java.io.IOException
 
@@ -33,7 +35,7 @@ class MattermostBridgeServer(
                 .start()
     }
 
-    val targetFactory = WebTargetFactory(mmUrl)
+    val targetFactory = WebTargetFactory(mmUrl) {ApiAuthContext.getAuth()}
     val httpService = ApiHttpService(targetFactory)
     fun resources() = arrayOf<Any>(
             MessageApiResource(MMMessageService(httpService)),

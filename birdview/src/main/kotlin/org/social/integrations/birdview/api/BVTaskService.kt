@@ -43,6 +43,9 @@ class BVTaskService(
 
         val end = System.currentTimeMillis();
         println("Request took ${end-start} ms.")
+
+        tasks.sortByDescending { it.updated }
+
         return Tasks().apply { this.tasks = tasks  }
     }
 }

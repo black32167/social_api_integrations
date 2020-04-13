@@ -43,6 +43,7 @@ class TrelloTaskService(
 
         val tasks = trelloCardsContainer.cards.map { card -> Task().apply {
             id = card.id
+            title = card.name
             updated = card.dateLastActivity
             httpUrl = card.url
         } }

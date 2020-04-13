@@ -42,6 +42,7 @@ class JiraTaskService(
 
         val tasks = jiraIssuesContainer.issues.map { issue -> Task().apply {
             id = issue.key
+            title = issue.fields.summary
             updated = issue.fields.updated
             httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}"
         } }

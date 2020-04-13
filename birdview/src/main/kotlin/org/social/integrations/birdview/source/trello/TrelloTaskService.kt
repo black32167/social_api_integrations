@@ -36,7 +36,7 @@ class TrelloTaskService(
                 .get()
 
         if(trelloIssuesResponse.status != 200) {
-            throw RuntimeException("Error reading Jira tasks: ${trelloIssuesResponse.readEntity(String::class.java)}")
+            throw RuntimeException("Error reading Trello cards: ${trelloIssuesResponse.readEntity(String::class.java)}")
         }
 
         val trelloCardsContainer = trelloIssuesResponse.readEntity(TrelloCardsSearchResponse::class.java)

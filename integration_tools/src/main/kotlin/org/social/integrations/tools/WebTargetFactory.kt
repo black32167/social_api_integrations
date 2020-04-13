@@ -12,7 +12,7 @@ import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.WebTarget
 
-class WebTargetFactory(url:String, val authProvider: () -> ApiAuth?) {
+class WebTargetFactory(url:String, val authProvider: () -> ApiAuth? = {null}) {
     private val client = buildClient()
 
     private fun buildClient(): Client =

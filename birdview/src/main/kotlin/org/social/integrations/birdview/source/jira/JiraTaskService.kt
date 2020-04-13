@@ -1,6 +1,5 @@
 package org.social.integrations.birdview.source.jira
 
-import org.social.integrations.birdview.config.BVJiraConfig
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterRequest
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterResponse
 import org.social.integrations.tools.WebTargetFactory
@@ -10,14 +9,14 @@ import social.api.task.model.Tasks
 import social.api.task.server.TaskApiService
 import javax.inject.Named
 import javax.ws.rs.client.Entity
-import javax.ws.rs.client.WebTarget
 
 @Named
 class JiraTaskService(
         jiraConfigProvider: BVJiraConfigProvider
 ): TaskApiService {
-    private val jiraConfig: BVJiraConfig = jiraConfigProvider.getJira()
-    private val jiraRestTarget: WebTarget = WebTargetFactory(jiraConfig.baseUrl) {
+    private val maxResults = 10;
+    private val jiraConfig = jiraConfigProvider.getJira()
+    private val jiraRestTarget = WebTargetFactory(jiraConfig.baseUrl) {
         BasicAuth(jiraConfig.user, jiraConfig.token)
     }.getTarget("/rest/api/2")
 
@@ -31,7 +30,7 @@ class JiraTaskService(
 
     override fun getTasks(status: String): Tasks {
         val jiraIssuesResponse = jiraRestTarget.path("search").request().post(Entity.json(JiraIssuesFilterRequest(
-                maxResults = 10,
+                maxResults = maxResults,
                 jql = "(assignee = currentUser() or watcher = currentUser()) and status in (\"${status}\") order by lastViewed DESC"
         )))
 

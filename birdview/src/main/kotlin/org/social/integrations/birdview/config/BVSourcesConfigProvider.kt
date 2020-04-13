@@ -17,11 +17,18 @@ class BVSourcesConfigProvider(@Value("\${config.location}") val sourcesConfigFil
 }
 
 class BVSourcesConfig (
-    val jira:BVJiraConfig
+    val jira: BVJiraConfig,
+    val trello: BVTrelloConfig
 )
 
 class BVJiraConfig (
         val baseUrl: String,
         val user: String,
+        val token: String
+)
+
+class BVTrelloConfig (
+        val baseUrl: String,
+        val key: String,
         val token: String
 )

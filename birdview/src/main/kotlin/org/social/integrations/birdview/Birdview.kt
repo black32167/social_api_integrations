@@ -3,12 +3,13 @@ package org.social.integrations.birdview
 import org.social.integrations.birdview.api.BVTaskService
 import org.social.integrations.birdview.model.BVTaskGroup
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import java.util.*
 
 fun main(args:Array<String>) {
     println("Hello!");
-    val ctx = AnnotationConfigApplicationContext(BirdviewConfiguration::class.java).use {
-        val taskGroups = it.getBean(BVTaskService::class.java).getTaskGroups("done")
-        println("Tasks:")
+    AnnotationConfigApplicationContext(BirdviewConfiguration::class.java).use {
+        val taskGroups = it.getBean(BVTaskService::class.java).getTaskGroups("progress")
+        println("Today:${Date()}")
         printTaskGroups(taskGroups)
     }
 }

@@ -22,7 +22,7 @@ class TrelloTaskService(
             .queryParam("token", trelloConfig.token)
 
     override fun getTasks(status: String): List<BVTask> {
-        val listName = status
+        val listName = getList(status)
         val trelloIssuesResponse = trelloRestTarget.path("search")
                 .queryParam("query", "@me list:\"${listName}\" sort:edited")
                 .queryParam("partial", true)
@@ -40,10 +40,18 @@ class TrelloTaskService(
             id = card.id,
             title = card.name,
             updated = card.dateLastActivity,
-            httpUrl = card.url,
-            terms = extractTerms(card)
-        ) }
+            httpUrl = card.url
+        ).also { it.addTerms(extractTerms(card)) } }
         return tasks
+    }
+
+    private fun getList(status: String): String? = when (status) {
+        "done" -> "Done"
+        "progress" -> "Progress"
+        "planned" -> "Planned"
+        "backlog" -> "Backlog"
+        "blocked" -> "Blocked"
+        else -> null
     }
 
     private fun extractTerms(card: TrelloCard): List<BVTerm> {

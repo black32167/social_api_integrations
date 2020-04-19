@@ -1,5 +1,6 @@
 package org.social.integrations.birdview.api
 
+import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTaskGroup
 import org.social.integrations.birdview.source.BVTaskSource
@@ -27,18 +28,20 @@ class BVTaskService(
         val sources = listOf<BVTaskSource>(jira, trello, github)
 
         val futures = sources.map { source ->
-            executor.submit(object : Callable<List<BVTask>> {
-                override fun call() = source.getTasks(status)
-            })
+            executor.submit(Callable<List<BVTask>> { source.getTasks(status) })
         }
-
         for (future in futures) {
-            tasks.addAll(future.get())
+            try {
+                tasks.addAll(future.get())
+            } catch (e:Exception) {
+                e.printStackTrace()
+            }
         }
 
         val end = System.currentTimeMillis();
         println("Request took ${end-start} ms.")
 
+        elevateTerms(tasks)
         for(task in tasks) {
             if(!addToGroup(groups, task)) {
                 groups.add(newGroup(task))
@@ -48,6 +51,16 @@ class BVTaskService(
         groups.sortByDescending { it.getLastUpdated() }
 
         return groups;
+    }
+
+    private fun elevateTerms(tasks: List<BVTask>) {
+        val elevatedTerms = ElevatedTerms()
+        tasks.forEach {
+            elevatedTerms.addTerms (it.getTerms())
+        }
+        tasks.forEach {task->
+            task.updateTerms(elevatedTerms)
+        }
     }
 
     private fun newGroup(task: BVTask): BVTaskGroup =
@@ -73,7 +86,10 @@ class BVTaskService(
     }
 
     private fun calculateProximity(group: BVTaskGroup, task: BVTask): Double =
-        task.terms.map {
-            if(group.groupTerms.keys.contains(it.term)) it.weight else 0.0
+        task.getTerms().map {bvTerm->
+            val groupTerm = group.groupTerms.findTerm(bvTerm.term)
+            groupTerm
+                    ?.let { Math.max(bvTerm.weight, it.weight) }
+                    ?: 0.0
         }.sumByDouble { it }
 }

@@ -24,9 +24,14 @@ class JiraTaskService(
     }.getTarget("/rest/api/2")
 
     override fun getTasks(status: String): List<BVTask> {
+        val issueStatus = getIssueStatus(status)
+        if(issueStatus == null) {
+            return listOf()
+        }
+
         val jiraIssuesResponse = jiraRestTarget.path("search").request().post(Entity.json(JiraIssuesFilterRequest(
                 maxResults = maxResults,
-                jql = "(assignee = currentUser() or watcher = currentUser()) and status in (\"${status}\") order by lastViewed DESC"
+                jql = "(assignee = currentUser() or watcher = currentUser()) and status in (\"${issueStatus}\") order by lastViewed DESC"
         )))
 
         if(jiraIssuesResponse.status != 200) {
@@ -39,10 +44,18 @@ class JiraTaskService(
             id = issue.key,
             title = issue.fields.summary,
             updated = issue.fields.updated,
-            httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}",
-            terms = extractTerms(issue)
-        ) }
+            httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}"
+        ).also { it.addTerms(extractTerms(issue)) } }
         return tasks
+    }
+
+    private fun getIssueStatus(status: String): String? = when (status) {
+        "done" -> "Done"
+        "progress" -> "In Progress"
+        "planned" -> "To Do"
+        "backlog" -> "Backlog"
+        "blocked" -> "Blocked"
+        else -> null
     }
 
     private fun extractTerms(issue: JiraIssue): List<BVTerm> {

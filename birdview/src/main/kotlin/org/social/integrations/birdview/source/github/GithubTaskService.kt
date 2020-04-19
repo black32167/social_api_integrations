@@ -25,6 +25,10 @@ class GithubTaskService(
 
     override fun getTasks(status: String): List<BVTask> {
         val issueState = getIssueState(status)
+        if(issueState == null) {
+            return listOf()
+        }
+
         val githubIssuesResponse = githubRestTarget.path("issues")
                 .queryParam("filter", "created")
                 .queryParam("state", issueState)
@@ -37,11 +41,10 @@ class GithubTaskService(
 
         val githubIssuesContainer = githubIssuesResponse.readEntity(Array<GithubIssue>::class.java)
 
-        val prsFutures = githubIssuesContainer.map {
-            executor.submit (object: Callable<GithubPRResponse> {
-                override fun call() = getPullRequest(it.pull_request.url)
-            })
-        }
+        val prsFutures = githubIssuesContainer
+                .map { it.pull_request?.url }
+                .filterNotNull()
+                .map {pr_url -> executor.submit (Callable<GithubPRResponse> { getPullRequest( pr_url ) }) }
 
         val tasks = prsFutures
                 .map { future -> future.get() }
@@ -49,9 +52,8 @@ class GithubTaskService(
                     id = pr.id,
                     title = pr.title,
                     updated = pr.updated_at,
-                    httpUrl = pr.html_url,
-                    terms = extractTerms(pr)
-                ) }
+                    httpUrl = pr.html_url
+                ).also { it.addTerms(extractTerms(pr)) } }
         return tasks
     }
 
@@ -63,7 +65,7 @@ class GithubTaskService(
         when(status) {
             "done" ->  "closed"
             "progress" ->  "open"
-            else -> ""
+            else -> null
         }
 
     private fun getPullRequest(prUrl: String): GithubPRResponse {

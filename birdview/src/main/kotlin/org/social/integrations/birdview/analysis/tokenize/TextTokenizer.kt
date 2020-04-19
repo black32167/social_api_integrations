@@ -16,7 +16,7 @@ class TextTokenizer(val stopWordsService: StopWordsService) {
         val termsList = mutableListOf<BVTerm>()
 
         // Leading terms extraction:
-        val leadingTerms = split(text.substringBefore(':'))
+        val leadingTerms = split(text.substringBefore(':', ""))
         leadingTerms.forEach { token->
             termsList.add( BVTerm(token, HEADING_TOKEN_WEIGHT))
         }
@@ -24,12 +24,14 @@ class TextTokenizer(val stopWordsService: StopWordsService) {
         // Create initial list of individual tokens
         val filteredTokens = split(text.substringAfter(":"))
         filteredTokens.forEach { token->
-            val term = when {
-                token.matches("\\w+-\\d+".toRegex()) -> BVTerm(token, JIRA_KEY_WEIGHT)
-                else -> BVTerm(token, DEFAULT_WEIGHT)
+            val stemmed = stem(token)
+            val bvTerm = when {
+                token.matches("\\w+-\\d+".toRegex()) -> BVTerm(stemmed, JIRA_KEY_WEIGHT)
+                else -> BVTerm(stemmed, DEFAULT_WEIGHT)
             }
-            termsList.add(term)
+            termsList.add(bvTerm)
         }
+
 
         // Generate sequential tokens
         val sequentialTokens = filteredTokens.windowed(2, 1).map { window->
@@ -41,6 +43,11 @@ class TextTokenizer(val stopWordsService: StopWordsService) {
 
         return termsList.toList()
     }
+
+    private fun stem(token: String): String
+        = if(token.endsWith("s"))  token.substringBeforeLast("s")
+        else token
+
 
     private fun split(text: String)
         = text.split(TOKEN_DELIMETERS)

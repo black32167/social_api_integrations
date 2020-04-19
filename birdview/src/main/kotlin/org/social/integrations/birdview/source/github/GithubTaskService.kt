@@ -52,7 +52,9 @@ class GithubTaskService(
                     id = pr.id,
                     title = pr.title,
                     updated = pr.updated_at,
-                    httpUrl = pr.html_url
+                    created = pr.created_at,
+                    httpUrl = pr.html_url,
+                    priority = 2
                 ).also { it.addTerms(extractTerms(pr)) } }
         return tasks
     }

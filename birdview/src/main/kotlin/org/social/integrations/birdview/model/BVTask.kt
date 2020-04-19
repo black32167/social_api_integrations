@@ -6,7 +6,9 @@ class BVTask (
         val id: String,
         val title: String,
         val updated: String,
-        val httpUrl: String
+        val created: String,
+        val httpUrl: String,
+        val priority: Int
 ) {
     private val elevatedTerms = ElevatedTerms()
 

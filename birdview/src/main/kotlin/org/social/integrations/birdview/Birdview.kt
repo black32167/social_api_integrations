@@ -7,8 +7,9 @@ import java.util.*
 
 fun main(args:Array<String>) {
     println("Hello!");
+    val filter = args[0]
     AnnotationConfigApplicationContext(BirdviewConfiguration::class.java).use {
-        val taskGroups = it.getBean(BVTaskService::class.java).getTaskGroups("progress")
+        val taskGroups = it.getBean(BVTaskService::class.java).getTaskGroups(filter)
         println("Today:${Date()}")
         printTaskGroups(taskGroups)
     }

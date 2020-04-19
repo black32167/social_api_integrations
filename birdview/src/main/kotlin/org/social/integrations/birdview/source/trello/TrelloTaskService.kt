@@ -33,14 +33,15 @@ class TrelloTaskService(
         if(trelloIssuesResponse.status != 200) {
             throw RuntimeException("Error reading Trello cards: ${trelloIssuesResponse.readEntity(String::class.java)}")
         }
-
         val trelloCardsContainer = trelloIssuesResponse.readEntity(TrelloCardsSearchResponse::class.java)
 
         val tasks = trelloCardsContainer.cards.map { card -> BVTask(
             id = card.id,
             title = card.name,
             updated = card.dateLastActivity,
-            httpUrl = card.url
+            created = "",
+            httpUrl = card.url,
+            priority = 1
         ).also { it.addTerms(extractTerms(card)) } }
         return tasks
     }

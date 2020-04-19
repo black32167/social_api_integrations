@@ -44,7 +44,9 @@ class JiraTaskService(
             id = issue.key,
             title = issue.fields.summary,
             updated = issue.fields.updated,
-            httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}"
+            created = issue.fields.created,
+            httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}",
+            priority = 1
         ).also { it.addTerms(extractTerms(issue)) } }
         return tasks
     }

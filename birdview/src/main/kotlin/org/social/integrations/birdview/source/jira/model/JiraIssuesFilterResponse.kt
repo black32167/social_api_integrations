@@ -11,5 +11,6 @@ class JiraIssue (
 
 class JiraIssueFields (
     val updated: String,
+    val created: String,
     val summary: String
 )

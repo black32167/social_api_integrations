@@ -1,34 +1,29 @@
 package org.social.integrations.birdview.source.github
 
+import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.model.BVTask
+import org.social.integrations.birdview.model.BVTerm
+import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.github.model.GithubIssue
 import org.social.integrations.birdview.source.github.model.GithubPRResponse
+import org.social.integrations.birdview.utils.BVConcurrentUtils
 import org.social.integrations.tools.WebTargetFactory
 import social.api.server.auth.BasicAuth
-import social.api.task.model.Task
-import social.api.task.model.Tasks
-import social.api.task.server.TaskApiService
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import javax.inject.Named
 
 @Named
 class GithubTaskService(
-        githubConfigProvider: BVGithubConfigProvider
-): TaskApiService {
-    private val executor = Executors.newCachedThreadPool()
+        githubConfigProvider: BVGithubConfigProvider,
+        val tokenizer: TextTokenizer
+): BVTaskSource {
+    private val executor = Executors.newCachedThreadPool(BVConcurrentUtils.getDaemonThreadFactory())
     private val maxResults = 10;
     private val githibConfig = githubConfigProvider.getGithub()
     private val githubRestTarget = getTarget(githibConfig.baseUrl)
 
-    override fun getTask(p0: String?): Task {
-        TODO("Not yet implemented")
-    }
-
-    override fun createTask(p0: Task?): Task {
-        TODO("Not yet implemented")
-    }
-
-    override fun getTasks(status: String): Tasks {
+    override fun getTasks(status: String): List<BVTask> {
         val issueState = getIssueState(status)
         val githubIssuesResponse = githubRestTarget.path("issues")
                 .queryParam("filter", "created")
@@ -50,13 +45,18 @@ class GithubTaskService(
 
         val tasks = prsFutures
                 .map { future -> future.get() }
-                .map { pr: GithubPRResponse -> Task().apply {
-                    id = pr.id
-                    title = pr.title
-                    updated = pr.updated_at
-                    httpUrl = pr.html_url
-                } }
-        return Tasks().apply { setTasks(tasks) }
+                .map { pr: GithubPRResponse -> BVTask(
+                    id = pr.id,
+                    title = pr.title,
+                    updated = pr.updated_at,
+                    httpUrl = pr.html_url,
+                    terms = extractTerms(pr)
+                ) }
+        return tasks
+    }
+
+    private fun extractTerms(pr: GithubPRResponse): List<BVTerm> {
+        return tokenizer.tokenize(pr.title)
     }
 
     private fun getIssueState(status: String) =

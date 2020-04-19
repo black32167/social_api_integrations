@@ -1,34 +1,29 @@
 package org.social.integrations.birdview.source.jira
 
+import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.model.BVTask
+import org.social.integrations.birdview.model.BVTerm
+import org.social.integrations.birdview.source.BVTaskSource
+import org.social.integrations.birdview.source.jira.model.JiraIssue
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterRequest
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterResponse
 import org.social.integrations.tools.WebTargetFactory
 import social.api.server.auth.BasicAuth
-import social.api.task.model.Task
-import social.api.task.model.Tasks
-import social.api.task.server.TaskApiService
 import javax.inject.Named
 import javax.ws.rs.client.Entity
 
 @Named
 class JiraTaskService(
-        jiraConfigProvider: BVJiraConfigProvider
-): TaskApiService {
+        jiraConfigProvider: BVJiraConfigProvider,
+        val tokenizer: TextTokenizer
+): BVTaskSource {
     private val maxResults = 10;
     private val jiraConfig = jiraConfigProvider.getJira()
     private val jiraRestTarget = WebTargetFactory(jiraConfig.baseUrl) {
         BasicAuth(jiraConfig.user, jiraConfig.token)
     }.getTarget("/rest/api/2")
 
-    override fun getTask(p0: String?): Task {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun createTask(p0: Task?): Task {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun getTasks(status: String): Tasks {
+    override fun getTasks(status: String): List<BVTask> {
         val jiraIssuesResponse = jiraRestTarget.path("search").request().post(Entity.json(JiraIssuesFilterRequest(
                 maxResults = maxResults,
                 jql = "(assignee = currentUser() or watcher = currentUser()) and status in (\"${status}\") order by lastViewed DESC"
@@ -40,12 +35,20 @@ class JiraTaskService(
 
         val jiraIssuesContainer = jiraIssuesResponse.readEntity(JiraIssuesFilterResponse::class.java)
 
-        val tasks = jiraIssuesContainer.issues.map { issue -> Task().apply {
-            id = issue.key
-            title = issue.fields.summary
-            updated = issue.fields.updated
-            httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}"
-        } }
-        return Tasks().apply { setTasks(tasks) }
+        val tasks = jiraIssuesContainer.issues.map { issue -> BVTask(
+            id = issue.key,
+            title = issue.fields.summary,
+            updated = issue.fields.updated,
+            httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}",
+            terms = extractTerms(issue)
+        ) }
+        return tasks
+    }
+
+    private fun extractTerms(issue: JiraIssue): List<BVTerm> {
+        val terms = mutableListOf<BVTerm>()
+        terms.add(BVTerm(issue.key, 3.0))
+        terms.addAll(tokenizer.tokenize(issue.fields.summary))
+        return terms
     }
 }

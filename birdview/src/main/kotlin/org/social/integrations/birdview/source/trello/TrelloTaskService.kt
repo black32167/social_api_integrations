@@ -1,16 +1,19 @@
 package org.social.integrations.birdview.source.trello
 
+import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.model.BVTask
+import org.social.integrations.birdview.model.BVTerm
+import org.social.integrations.birdview.source.BVTaskSource
+import org.social.integrations.birdview.source.trello.model.TrelloCard
 import org.social.integrations.birdview.source.trello.model.TrelloCardsSearchResponse
 import org.social.integrations.tools.WebTargetFactory
-import social.api.task.model.Task
-import social.api.task.model.Tasks
-import social.api.task.server.TaskApiService
 import javax.inject.Named
 
 @Named
 class TrelloTaskService(
-        trelloConfigProvider: BVTrelloConfigProvider
-) : TaskApiService {
+        trelloConfigProvider: BVTrelloConfigProvider,
+        val tokenizer: TextTokenizer
+) : BVTaskSource {
     private val maxResults = 10;
     private val trelloConfig = trelloConfigProvider.getTrello()
     private val trelloRestTarget = WebTargetFactory(trelloConfig.baseUrl)
@@ -18,15 +21,7 @@ class TrelloTaskService(
             .queryParam("key", trelloConfig.key)
             .queryParam("token", trelloConfig.token)
 
-    override fun getTask(p0: String?): Task {
-        TODO("Not yet implemented")
-    }
-
-    override fun createTask(p0: Task?): Task {
-        TODO("Not yet implemented")
-    }
-
-    override fun getTasks(status: String): Tasks {
+    override fun getTasks(status: String): List<BVTask> {
         val listName = status
         val trelloIssuesResponse = trelloRestTarget.path("search")
                 .queryParam("query", "@me list:\"${listName}\" sort:edited")
@@ -41,12 +36,21 @@ class TrelloTaskService(
 
         val trelloCardsContainer = trelloIssuesResponse.readEntity(TrelloCardsSearchResponse::class.java)
 
-        val tasks = trelloCardsContainer.cards.map { card -> Task().apply {
-            id = card.id
-            title = card.name
-            updated = card.dateLastActivity
-            httpUrl = card.url
-        } }
-        return Tasks().apply { setTasks(tasks) }
+        val tasks = trelloCardsContainer.cards.map { card -> BVTask(
+            id = card.id,
+            title = card.name,
+            updated = card.dateLastActivity,
+            httpUrl = card.url,
+            terms = extractTerms(card)
+        ) }
+        return tasks
+    }
+
+    private fun extractTerms(card: TrelloCard): List<BVTerm> {
+        val terms = mutableListOf<BVTerm>()
+        terms.add(BVTerm(card.url, 3.0))
+        terms.addAll(tokenizer.tokenize(card.name))
+        terms.addAll(card.labels.map { BVTerm(it.name, 2.0) })
+        return terms
     }
 }

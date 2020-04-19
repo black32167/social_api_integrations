@@ -13,17 +13,14 @@ class BVTaskGroup {
 
     fun getTitle(): String {
         val priorityGroups:Map<Int, List<BVTask>> = tasks.groupBy { it.priority }.toSortedMap (Comparator<Int> { p1, p2 -> p1.compareTo(p2) })
+        val titleTask:BVTask? = priorityGroups.values.firstOrNull()?.sortedBy { it.updated }?.last()
 
-        var title:String? = null
-        for(group in priorityGroups.values) {
-            title = group.sortedBy { it.updated }.lastOrNull()?.title
-            if(title != null) {
-                break
-            }
-        }
-
-        return title?.substringBefore(':') ?: "---"
+        return titleTask?.title?.substringBefore(':') ?: "---"
+        //return titleTask?.let { describe(it) } ?: "---"
     }
+
+    fun describe(task: BVTask): String
+        = "${task.updated} - ${task.title} : ${task.httpUrl}"
 
     fun getLastUpdated(): String =
             tasks.first()?.updated ?: ""

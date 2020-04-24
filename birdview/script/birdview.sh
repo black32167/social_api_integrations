@@ -5,7 +5,7 @@ CMD=$1
 
 export SH_SQS_QUEUE_URL="${SQS_RSHSQSQUEUE_QUEUE_URL}"
 export SH_REGION="${SH_REGION:-ap-southeast-2}"
-: "${CONFIG_LOCATION:=${HOME}/codes/bv.json}"
+: "${CONFIG_LOCATION:=${HOME}/codes}"
 export CONFIG_LOCATION
 
 case "${CMD}" in

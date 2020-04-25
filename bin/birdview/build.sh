@@ -1,4 +1,8 @@
+#!/bin/bash
+
 SCRIPT_DIR="${BASH_SOURCE%/*}"
+. "${SCRIPT_DIR}/include.sh"
+
 MODUE_DIR="${SCRIPT_DIR}/../../birdview"
 
 mbuild() {
@@ -6,7 +10,6 @@ mbuild() {
 }
 
 dbuild() {
-  local IMAGE_NAME="birdview"
 	local CTX_DIR="${MODUE_DIR}/target/birdview-dist"
 	local DOCKER_FILE="${MODUE_DIR}/docker/Dockerfile"
 
@@ -22,5 +25,9 @@ docker)
   ;;
 maven)
   mbuild
+  ;;
+*)
+  echo "Usage:"
+  echo "${BASH_SOURCE} {docker|maven}"
   ;;
 esac

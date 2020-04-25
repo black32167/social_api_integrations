@@ -39,7 +39,7 @@ class BVTaskService(
         }
 
         val end = System.currentTimeMillis();
-        println("Request took ${end-start} ms.")
+        //println("Request took ${end-start} ms.")
 
         elevateTerms(tasks)
         for(task in tasks) {

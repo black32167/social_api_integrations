@@ -8,7 +8,7 @@ dpublish() {
 }
 
 case "${1}" in
-publish)
+docker)
   dpublish
   ;;
 *)

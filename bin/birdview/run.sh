@@ -5,4 +5,4 @@ SCRIPT_DIR="${BASH_SOURCE%/*}"
 
 : "${HOST_CONFIG_FOLDER:=${HOME}/codes}"
 
-docker run -v "${HOST_CONFIG_FOLDER}":/config "${IMAGE_NAME}" "${@}"
+docker run -rm -v "${HOST_CONFIG_FOLDER}":/config "${IMAGE_NAME}" "${@}"

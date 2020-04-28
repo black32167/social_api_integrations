@@ -4,6 +4,7 @@ import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.source.BVTaskSource
+import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.jira.model.JiraIssue
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterRequest
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterResponse
@@ -15,9 +16,9 @@ import javax.ws.rs.client.Entity
 @Named
 class JiraTaskService(
         jiraConfigProvider: BVJiraConfigProvider,
-        val tokenizer: TextTokenizer
+        val tokenizer: TextTokenizer,
+        val sourceConfig: SourceConfig
 ): BVTaskSource {
-    private val maxResults = 10;
     private val jiraConfig = jiraConfigProvider.getJira()
     private val jiraRestTarget = WebTargetFactory(jiraConfig.baseUrl) {
         BasicAuth(jiraConfig.user, jiraConfig.token)
@@ -30,13 +31,16 @@ class JiraTaskService(
         }
 
         val jiraIssuesResponse = jiraRestTarget.path("search").request().post(Entity.json(JiraIssuesFilterRequest(
-                maxResults = maxResults,
+                maxResults = sourceConfig.getMaxResult(),
+                fields = arrayOf("*all"),
                 jql = "(assignee = currentUser() or watcher = currentUser()) and status in (\"${issueStatus}\") order by lastViewed DESC"
         )))
 
         if(jiraIssuesResponse.status != 200) {
             throw RuntimeException("Error reading Jira tasks: ${jiraIssuesResponse.readEntity(String::class.java)}")
         }
+
+        // println(jiraIssuesResponse.readEntity(String::class.java))
 
         val jiraIssuesContainer = jiraIssuesResponse.readEntity(JiraIssuesFilterResponse::class.java)
 
@@ -64,6 +68,8 @@ class JiraTaskService(
         val terms = mutableListOf<BVTerm>()
         terms.add(BVTerm(issue.key, 3.0))
         terms.addAll(tokenizer.tokenize(issue.fields.summary))
+        issue.fields.parent?.also { terms.add(BVTerm(it.key, 6.0)) }
+        issue.fields.customfield_10007?.also { terms.add(BVTerm(it, 6.0)) }
         return terms
     }
 }

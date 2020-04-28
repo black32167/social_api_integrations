@@ -4,6 +4,7 @@ import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.source.BVTaskSource
+import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.trello.model.TrelloCard
 import org.social.integrations.birdview.source.trello.model.TrelloCardsSearchResponse
 import org.social.integrations.tools.WebTargetFactory
@@ -12,9 +13,9 @@ import javax.inject.Named
 @Named
 class TrelloTaskService(
         trelloConfigProvider: BVTrelloConfigProvider,
-        val tokenizer: TextTokenizer
+        val tokenizer: TextTokenizer,
+        val sourceConfig: SourceConfig
 ) : BVTaskSource {
-    private val maxResults = 10;
     private val trelloConfig = trelloConfigProvider.getTrello()
     private val trelloRestTarget = WebTargetFactory(trelloConfig.baseUrl)
             .getTarget("/1")
@@ -26,7 +27,7 @@ class TrelloTaskService(
         val trelloIssuesResponse = trelloRestTarget.path("search")
                 .queryParam("query", "@me list:\"${listName}\" sort:edited")
                 .queryParam("partial", true)
-                .queryParam("cards_limit", maxResults)
+                .queryParam("cards_limit", sourceConfig.getMaxResult())
                 .request()
                 .get()
 

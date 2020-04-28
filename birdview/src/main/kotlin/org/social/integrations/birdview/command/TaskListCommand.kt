@@ -24,6 +24,9 @@ class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
     @CommandLine.Option(names = arrayOf("--noGrouping"), description = arrayOf("Disable tasks grouping"))
     var noGrouping = false
 
+    @CommandLine.Option(names = arrayOf("--noItems"), description = arrayOf("Hide items in groups"))
+    var noItems = false
+
     override fun call(): Int {
         BVColorUtils.useColors = !noColors
 
@@ -39,7 +42,9 @@ class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
 
     fun printTaskGroups(tasksGroup:List<BVTaskGroup>) {
         tasksGroup.forEach { group->
-            if (group.tasks.size > 1) {
+            if(noItems) {
+                println(">>> ${group.getTitle()}")
+            } else if (group.tasks.size > 1) {
                 println(">>> ${group.getTitle()}")
                 group.tasks.forEach { task ->
                     println("    ${describe(task)}")

@@ -61,6 +61,9 @@ class BVTaskService(
         tasks.forEach {task->
             task.updateTerms(elevatedTerms)
         }
+
+        // elevatedTerms.getTerms().sortedBy { it.term }.forEach { println("${it.term}:${it.weight}") }
+
     }
 
     private fun newGroup(task: BVTask): BVTaskGroup =

@@ -4,6 +4,7 @@ import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.source.BVTaskSource
+import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.github.model.GithubIssue
 import org.social.integrations.birdview.source.github.model.GithubPRResponse
 import org.social.integrations.birdview.utils.BVConcurrentUtils
@@ -16,10 +17,10 @@ import javax.inject.Named
 @Named
 class GithubTaskService(
         githubConfigProvider: BVGithubConfigProvider,
-        val tokenizer: TextTokenizer
+        val tokenizer: TextTokenizer,
+        val sourceConfig: SourceConfig
 ): BVTaskSource {
     private val executor = Executors.newCachedThreadPool(BVConcurrentUtils.getDaemonThreadFactory())
-    private val maxResults = 10;
     private val githibConfig = githubConfigProvider.getGithub()
     private val githubRestTarget = getTarget(githibConfig.baseUrl)
 
@@ -32,6 +33,7 @@ class GithubTaskService(
         val githubIssuesResponse = githubRestTarget.path("issues")
                 .queryParam("filter", "created")
                 .queryParam("state", issueState)
+                .queryParam("per_page", sourceConfig.getMaxResult())
                 .request()
                 .get()
 

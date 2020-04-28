@@ -21,7 +21,7 @@ class BVTaskService(
     private val executor = Executors.newFixedThreadPool(3, BVConcurrentUtils.getDaemonThreadFactory())
     private val proximityMergingThreshold = 2.0
 
-    fun getTaskGroups(status: String): List<BVTaskGroup> {
+    fun getTaskGroups(status: String, grouping: Boolean): List<BVTaskGroup> {
         val groups = mutableListOf<BVTaskGroup>()
         val tasks = mutableListOf<BVTask>()
         val start = System.currentTimeMillis()
@@ -43,7 +43,7 @@ class BVTaskService(
 
         elevateTerms(tasks)
         for(task in tasks) {
-            if(!addToGroup(groups, task)) {
+            if(!(grouping && addToGroup(groups, task))) {
                 groups.add(newGroup(task))
             }
         }

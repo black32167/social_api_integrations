@@ -6,7 +6,7 @@ import javax.inject.Named
 @Named
 class TextTokenizer(val stopWordsService: StopWordsService) {
     companion object {
-        val TOKEN_DELIMETERS = "[ (),.:\"/]".toRegex()
+        val TOKEN_DELIMETERS = "[ '(),.:\"/]".toRegex()
         const val HEADING_TOKEN_WEIGHT = 4.0
         const val JIRA_KEY_WEIGHT = 3.0
         const val SEQUENTIAL_WEIGHT = 2.0

@@ -18,5 +18,5 @@ case "${CMD}" in
         ;;
     *)
         echo "Usage:"
-        echo "${BASH_SOURCE%/*} {progress|done|planned|blocked} [--noColors]"
+        echo "${BASH_SOURCE%/*} {progress|done|planned|blocked} [--noColors] [--noGrouping]"
 esac

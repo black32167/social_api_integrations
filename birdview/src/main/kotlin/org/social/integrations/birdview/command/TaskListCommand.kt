@@ -21,10 +21,13 @@ class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
     @CommandLine.Option(names = arrayOf("-n", "--noColors"), description = arrayOf("Disable ANSI colors"))
     var noColors = false
 
+    @CommandLine.Option(names = arrayOf("--noGrouping"), description = arrayOf("Disable tasks grouping"))
+    var noGrouping = false
+
     override fun call(): Int {
         BVColorUtils.useColors = !noColors
 
-        val taskGroups = taskService.getTaskGroups(status)
+        val taskGroups = taskService.getTaskGroups(status, !noGrouping)
 
         println("Listing work in '${BVColorUtils.bold(BVColorUtils.red(status))}' state.")
         println("Today is ${BVColorUtils.bold(dateFormat.format(Date()))}")

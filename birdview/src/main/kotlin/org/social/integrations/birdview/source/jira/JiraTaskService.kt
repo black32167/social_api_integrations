@@ -19,6 +19,7 @@ class JiraTaskService(
         val tokenizer: TextTokenizer,
         val sourceConfig: SourceConfig
 ): BVTaskSource {
+    private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private val jiraConfig = jiraConfigProvider.getJira()
     private val jiraRestTarget = WebTargetFactory(jiraConfig.baseUrl) {
         BasicAuth(jiraConfig.user, jiraConfig.token)
@@ -47,8 +48,8 @@ class JiraTaskService(
         val tasks = jiraIssuesContainer.issues.map { issue -> BVTask(
             id = issue.key,
             title = issue.fields.summary,
-            updated = issue.fields.updated,
-            created = issue.fields.created,
+            updated = dateTimeFormat.parse(issue.fields.updated),
+            created = dateTimeFormat.parse(issue.fields.created),
             httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}",
             priority = 1
         ).also { it.addTerms(extractTerms(issue)) } }
@@ -66,10 +67,10 @@ class JiraTaskService(
 
     private fun extractTerms(issue: JiraIssue): List<BVTerm> {
         val terms = mutableListOf<BVTerm>()
-        terms.add(BVTerm(issue.key, 3.0))
+        terms.add(BVTerm(issue.key, 100.0))
         terms.addAll(tokenizer.tokenize(issue.fields.summary))
-        issue.fields.parent?.also { terms.add(BVTerm(it.key, 6.0)) }
-        issue.fields.customfield_10007?.also { terms.add(BVTerm(it, 6.0)) }
+        issue.fields.parent?.also { terms.add(BVTerm(it.key, 1000.0)) }
+        issue.fields.customfield_10007?.also { terms.add(BVTerm(it, 1000.0)) }
         return terms
     }
 }

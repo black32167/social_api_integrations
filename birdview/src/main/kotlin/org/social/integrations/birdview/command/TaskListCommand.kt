@@ -58,4 +58,4 @@ class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
     }
 
     fun describe(task: BVTask)
-            = "${task.updated.substringBefore('T')} - ${BVColorUtils.red(task.title)} : ${task.httpUrl}"}
+            = "${dateFormat.format(task.updated)} - ${BVColorUtils.red(task.title)} : ${task.httpUrl}"}

@@ -8,6 +8,7 @@ import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.trello.model.TrelloCard
 import org.social.integrations.birdview.source.trello.model.TrelloCardsSearchResponse
 import org.social.integrations.tools.WebTargetFactory
+import java.util.*
 import javax.inject.Named
 
 @Named
@@ -16,6 +17,9 @@ class TrelloTaskService(
         val tokenizer: TextTokenizer,
         val sourceConfig: SourceConfig
 ) : BVTaskSource {
+    //private val dateTimeFormat = DateTimeFormatter.ISO_DATE_TIME//java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")2020-04-29T04:12:34.125Z
+    private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+
     private val trelloConfig = trelloConfigProvider.getTrello()
     private val trelloRestTarget = WebTargetFactory(trelloConfig.baseUrl)
             .getTarget("/1")
@@ -39,8 +43,8 @@ class TrelloTaskService(
         val tasks = trelloCardsContainer.cards.map { card -> BVTask(
             id = card.id,
             title = card.name,
-            updated = card.dateLastActivity,
-            created = "",
+            updated = parseDate(card.dateLastActivity),
+            created = parseDate(card.dateLastActivity),
             httpUrl = card.url,
             priority = 1
         ).also { it.addTerms(extractTerms(card)) } }
@@ -63,4 +67,6 @@ class TrelloTaskService(
         terms.addAll(card.labels.map { BVTerm(it.name, 2.0) })
         return terms
     }
+
+    private fun parseDate(dateString: String):Date = dateTimeFormat.parse(dateString)//Date.parse(dateString, dateTimeFormat)
 }

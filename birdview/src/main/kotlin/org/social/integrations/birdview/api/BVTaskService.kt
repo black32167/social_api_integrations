@@ -42,8 +42,19 @@ class BVTaskService(
         //println("Request took ${end-start} ms.")
 
         elevateTerms(tasks)
+
+        // Sort tasks by update time
+        tasks.sortBy { it.updated }
+
+        var minTime = Long.MAX_VALUE
+        var maxTime = Long.MIN_VALUE
         for(task in tasks) {
-            if(!(grouping && addToGroup(groups, task))) {
+            minTime = Math.min(minTime, task.updated.time)
+            maxTime = Math.max(maxTime, task.updated.time)
+        }
+
+        for(task in tasks) {
+            if(!(grouping && addToGroup(groups, task, maxTime - minTime))) {
                 groups.add(newGroup(task))
             }
         }
@@ -69,11 +80,19 @@ class BVTaskService(
     private fun newGroup(task: BVTask): BVTaskGroup =
         BVTaskGroup().also {it.addTask(task) }
 
-    private fun addToGroup(groups: MutableList<BVTaskGroup>, task: BVTask): Boolean {
+    // NOTE: side-effect: sorts groups
+    private fun addToGroup(groups: MutableList<BVTaskGroup>, task: BVTask, maxTimeDistance:Long): Boolean {
         var candidateGroup:BVTaskGroup? = null
         var candidateProximity = 0.0
-        for (group in groups) {
-            val proximity = calculateProximity(group, task)
+
+        val maxTimeDistanceMs = 1000*60*60*24
+        for(i in groups.size-1 downTo 0) {
+            val group = groups[i]
+            val timeDistance = task.updated.time - group.getLastUpdated().time
+            if (timeDistance > maxTimeDistance) {
+                break
+            }
+            val proximity = calculateProximity(group, task, maxTimeDistance)
             if(proximity > candidateProximity) {
                 candidateGroup = group
                 candidateProximity = proximity
@@ -82,17 +101,29 @@ class BVTaskService(
 
         if(candidateGroup != null && candidateProximity > proximityMergingThreshold) {
             candidateGroup.addTask(task)
+
+            //Resort groups
+            groups.sortBy { it.getLastUpdated() }
+
             return true
         }
 
         return false
     }
 
-    private fun calculateProximity(group: BVTaskGroup, task: BVTask): Double =
-        task.getTerms().map {bvTerm->
+    private fun calculateProximity(group: BVTaskGroup, task: BVTask, maxTimeDistance:Long): Double {
+        val termsDistance = task.getTerms().map { bvTerm ->
             val groupTerm = group.groupTerms.findTerm(bvTerm.term)
             groupTerm
-                    ?.let { Math.max(bvTerm.weight, it.weight) }
+                    ?.let {
+                        Math.max(bvTerm.weight, it.weight)
+                    }
                     ?: 0.0
         }.sumByDouble { it }
+
+        //val logTermDistance = Math.log(termsDistance)
+        val proximity = termsDistance
+       println("[${task.title}-${group.getTitle()}]: $termsDistance")
+        return proximity
+    }
 }

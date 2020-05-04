@@ -20,6 +20,7 @@ class GithubTaskService(
         val tokenizer: TextTokenizer,
         val sourceConfig: SourceConfig
 ): BVTaskSource {
+    private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
     private val executor = Executors.newCachedThreadPool(BVConcurrentUtils.getDaemonThreadFactory())
     private val githibConfig = githubConfigProvider.getGithub()
     private val githubRestTarget = getTarget(githibConfig.baseUrl)
@@ -53,8 +54,8 @@ class GithubTaskService(
                 .map { pr: GithubPRResponse -> BVTask(
                     id = pr.id,
                     title = pr.title,
-                    updated = pr.updated_at,
-                    created = pr.created_at,
+                    updated = dateTimeFormat.parse(pr.updated_at),
+                    created = dateTimeFormat.parse(pr.created_at),
                     httpUrl = pr.html_url,
                     priority = 2
                 ).also { it.addTerms(extractTerms(pr)) } }

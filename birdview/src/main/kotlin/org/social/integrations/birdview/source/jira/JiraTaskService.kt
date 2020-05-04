@@ -67,10 +67,13 @@ class JiraTaskService(
 
     private fun extractTerms(issue: JiraIssue): List<BVTerm> {
         val terms = mutableListOf<BVTerm>()
-        terms.add(BVTerm(issue.key, 100.0))
-        terms.addAll(tokenizer.tokenize(issue.fields.summary))
-        issue.fields.parent?.also { terms.add(BVTerm(it.key, 1000.0)) }
-        issue.fields.customfield_10007?.also { terms.add(BVTerm(it, 1000.0)) }
+        if (issue.fields.parent != null || issue.fields.customfield_10007 != null) {
+            issue.fields.parent?.also { terms.add(BVTerm(it.key, 1000.0)) }
+            issue.fields.customfield_10007?.also { terms.add(BVTerm(it, 1000.0)) }
+        } else {
+            terms.add(BVTerm(issue.key, 100.0))
+            terms.addAll(tokenizer.tokenize(issue.fields.summary))
+        }
         return terms
     }
 }

@@ -1,5 +1,6 @@
 package org.social.integrations.birdview.model
 
+import org.social.integrations.birdview.analysis.Document
 import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
 import java.util.*
 
@@ -10,10 +11,10 @@ class BVTask (
         val created: Date,
         val httpUrl: String,
         val priority: Int
-) {
+) : Document {
     private val elevatedTerms = ElevatedTerms()
 
-    fun getTerms():List<BVTerm> = elevatedTerms.getTerms()
+    fun getBVTerms():List<BVTerm> = elevatedTerms.getTerms()
 
     fun addTerms(extractTerms: List<BVTerm>) {
         elevatedTerms.addTerms(extractTerms)
@@ -22,6 +23,10 @@ class BVTask (
     fun updateTerms(otherElevatedTerms: ElevatedTerms) {
         elevatedTerms.updateTerms(otherElevatedTerms)
     }
+
+    override fun getTerms(): List<String> = getBVTerms().map { it.term }
+
+    override fun getTermFrequency(term: String): Int = getTerms().count { it == term }
 }
 
 data class BVTerm (

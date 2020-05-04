@@ -1,5 +1,6 @@
 package org.social.integrations.birdview.api
 
+import org.social.integrations.birdview.analysis.TfIdfCalclulator
 import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTaskGroup
@@ -11,6 +12,7 @@ import org.social.integrations.birdview.utils.BVConcurrentUtils
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import javax.inject.Named
+import kotlin.math.sqrt
 
 @Named
 class BVTaskService(
@@ -19,7 +21,8 @@ class BVTaskService(
         private val github: GithubTaskService
 )  {
     private val executor = Executors.newFixedThreadPool(3, BVConcurrentUtils.getDaemonThreadFactory())
-    private val proximityMergingThreshold = 2.0
+    private val proximityMergingThreshold = 0.1
+    private val tfIdfCalclulator = TfIdfCalclulator()
 
     fun getTaskGroups(status: String, grouping: Boolean): List<BVTaskGroup> {
         val groups = mutableListOf<BVTaskGroup>()
@@ -46,15 +49,12 @@ class BVTaskService(
         // Sort tasks by update time
         tasks.sortBy { it.updated }
 
-        var minTime = Long.MAX_VALUE
-        var maxTime = Long.MIN_VALUE
         for(task in tasks) {
-            minTime = Math.min(minTime, task.updated.time)
-            maxTime = Math.max(maxTime, task.updated.time)
+            tfIdfCalclulator.addDoc(task)
         }
 
         for(task in tasks) {
-            if(!(grouping && addToGroup(groups, task, maxTime - minTime))) {
+            if(!(grouping && addToGroup(groups, task))) {
                 groups.add(newGroup(task))
             }
         }
@@ -67,7 +67,7 @@ class BVTaskService(
     private fun elevateTerms(tasks: List<BVTask>) {
         val elevatedTerms = ElevatedTerms()
         tasks.forEach {
-            elevatedTerms.addTerms (it.getTerms())
+            elevatedTerms.addTerms (it.getBVTerms())
         }
         tasks.forEach {task->
             task.updateTerms(elevatedTerms)
@@ -81,7 +81,7 @@ class BVTaskService(
         BVTaskGroup().also {it.addTask(task) }
 
     // NOTE: side-effect: sorts groups
-    private fun addToGroup(groups: MutableList<BVTaskGroup>, task: BVTask, maxTimeDistance:Long): Boolean {
+    private fun addToGroup(groups: MutableList<BVTaskGroup>, task: BVTask): Boolean {
         var candidateGroup:BVTaskGroup? = null
         var candidateProximity = 0.0
 
@@ -89,10 +89,10 @@ class BVTaskService(
         for(i in groups.size-1 downTo 0) {
             val group = groups[i]
             val timeDistance = task.updated.time - group.getLastUpdated().time
-            if (timeDistance > maxTimeDistance) {
+            if (timeDistance > maxTimeDistanceMs) {
                 break
             }
-            val proximity = calculateProximity(group, task, maxTimeDistance)
+            val proximity = calculateSimilarity(group, task)
             if(proximity > candidateProximity) {
                 candidateGroup = group
                 candidateProximity = proximity
@@ -111,19 +111,30 @@ class BVTaskService(
         return false
     }
 
-    private fun calculateProximity(group: BVTaskGroup, task: BVTask, maxTimeDistance:Long): Double {
-        val termsDistance = task.getTerms().map { bvTerm ->
-            val groupTerm = group.groupTerms.findTerm(bvTerm.term)
-            groupTerm
-                    ?.let {
-                        Math.max(bvTerm.weight, it.weight)
-                    }
-                    ?: 0.0
-        }.sumByDouble { it }
+    private fun calculateSimilarity(group: BVTaskGroup, task: BVTask): Double {
+        val groupVecSize = sqrt(group.getTerms().map { tfIdfCalclulator.calculate(it, group) }.sum())
+        val taskVecSize = sqrt(task.getTerms().map { tfIdfCalclulator.calculate(it, task) }.sum())
+        val groupTaskProdVecSize = sqrt(group.getTerms().map { gTerm->
+            tfIdfCalclulator.calculate(gTerm, group) * tfIdfCalclulator.calculate(gTerm, task);
+        }. sum())
 
-        //val logTermDistance = Math.log(termsDistance)
-        val proximity = termsDistance
-       println("[${task.title}-${group.getTitle()}]: $termsDistance")
-        return proximity
+        val cos = groupTaskProdVecSize/(groupVecSize*taskVecSize)
+        if(cos > 0.01) {
+            println("[${task.title}-${group.getTitle()}]: $cos")
+        }
+        return cos
+//        val termsDistance = task.getBVTerms().map { bvTerm ->
+//            val groupTerm = group.groupTerms.findTerm(bvTerm.term)
+//            groupTerm
+//                    ?.let {
+//                        Math.max(bvTerm.weight, it.weight)
+//                    }
+//                    ?: 0.0
+//        }.sumByDouble { it }
+//
+//        //val logTermDistance = Math.log(termsDistance)
+//        val proximity = termsDistance
+//       println("[${task.title}-${group.getTitle()}]: $termsDistance")
+//        return proximity
     }
 }

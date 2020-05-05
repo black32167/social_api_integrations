@@ -4,6 +4,7 @@ import org.social.integrations.birdview.analysis.Document
 import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
 import java.util.*
 import kotlin.Comparator
+import kotlin.math.min
 
 class BVTaskGroup : Document {
     val tasks = sortedSetOf<BVTask> (Comparator<BVTask> { t1, t2 -> t2.updated.compareTo(t1.updated) })
@@ -15,11 +16,8 @@ class BVTaskGroup : Document {
     }
 
     fun getTitle(): String {
-        val priorityGroups:Map<Int, List<BVTask>> = tasks.groupBy { it.priority }.toSortedMap (Comparator<Int> { p1, p2 -> p1.compareTo(p2) })
-        val titleTask:BVTask? = priorityGroups.values.firstOrNull()?.sortedByDescending { it.updated }?.last()
-
-        return titleTask?.title?.substringBefore(':') ?: "---"
-        //return titleTask?.let { describe(it) } ?: "---"
+        val sortedTerms = tasks.flatMap { it.getTerms() }.toSet().sortedByDescending { getTermFrequency(it) }
+        return sortedTerms.subList(0, min(3, sortedTerms.size)).joinToString(" ")
     }
 
     fun describe(task: BVTask): String

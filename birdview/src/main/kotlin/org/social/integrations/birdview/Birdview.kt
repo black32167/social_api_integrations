@@ -8,6 +8,7 @@ import picocli.CommandLine
 fun main(vararg args:String) {
     AnnotationConfigApplicationContext(BirdviewConfiguration::class.java).use {ctx->
         val taskService =  ctx.getBean(BVTaskService::class.java)
-        CommandLine(TaskListCommand(taskService)).execute(*args)
+        val groupDescriber = ctx.getBean(GroupDescriber::class.java)
+        CommandLine(TaskListCommand(taskService, groupDescriber)).execute(*args)
     }
 }

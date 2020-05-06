@@ -1,5 +1,6 @@
 package org.social.integrations.birdview.command
 
+import org.social.integrations.birdview.GroupDescriber
 import org.social.integrations.birdview.api.BVTaskService
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTaskGroup
@@ -11,7 +12,7 @@ import java.util.concurrent.Callable
 
 @CommandLine.Command(name = "list", mixinStandardHelpOptions = true,
         description = arrayOf("Lists tasks."))
-class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
+class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupDescriber) : Callable<Int> {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd")
             .also { it.timeZone = TimeZone.getTimeZone("UTC") }
 
@@ -43,9 +44,9 @@ class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
     fun printTaskGroups(tasksGroup:List<BVTaskGroup>) {
         tasksGroup.forEach { group->
             if(noItems) {
-                println(">>> ${group.getTitle()}")
+                println(">>> ${group.title}")
             } else if (group.tasks.size > 1) {
-                println(">>> ${group.getTitle()}")
+                println(">>> ${group.title}")
                 group.tasks.forEach { task ->
                     println("    ${describe(task)}")
                 }

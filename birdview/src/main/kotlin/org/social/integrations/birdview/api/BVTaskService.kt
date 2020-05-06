@@ -1,5 +1,6 @@
 package org.social.integrations.birdview.api
 
+import org.social.integrations.birdview.GroupDescriber
 import org.social.integrations.birdview.analysis.TfIdfCalclulator
 import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
 import org.social.integrations.birdview.model.BVTask
@@ -16,6 +17,7 @@ import kotlin.math.sqrt
 
 @Named
 class BVTaskService(
+        private val groupDescriber: GroupDescriber,
         private var jira: JiraTaskService,
         private val trello: TrelloTaskService,
         private val github: GithubTaskService
@@ -61,6 +63,8 @@ class BVTaskService(
 
         groups.sortByDescending { it.getLastUpdated() }
 
+        groupDescriber.describe(groups)
+
         return groups;
     }
 
@@ -72,9 +76,6 @@ class BVTaskService(
         tasks.forEach {task->
             task.updateTerms(elevatedTerms)
         }
-
-        // elevatedTerms.getTerms().sortedBy { it.term }.forEach { println("${it.term}:${it.weight}") }
-
     }
 
     private fun newGroup(task: BVTask): BVTaskGroup =
@@ -119,22 +120,9 @@ class BVTaskService(
         }. sum())
 
         val cos = groupTaskProdVecSize/(groupVecSize*taskVecSize)
-        if(cos > 0.01) {
-            println("[${task.title}-${group.getTitle()}]: $cos")
-        }
+//        if(cos > 0.01) {
+//            println("[${task.title}-${groupDescriber.describe(group)}]: $cos")
+//        }
         return cos
-//        val termsDistance = task.getBVTerms().map { bvTerm ->
-//            val groupTerm = group.groupTerms.findTerm(bvTerm.term)
-//            groupTerm
-//                    ?.let {
-//                        Math.max(bvTerm.weight, it.weight)
-//                    }
-//                    ?: 0.0
-//        }.sumByDouble { it }
-//
-//        //val logTermDistance = Math.log(termsDistance)
-//        val proximity = termsDistance
-//       println("[${task.title}-${group.getTitle()}]: $termsDistance")
-//        return proximity
     }
 }

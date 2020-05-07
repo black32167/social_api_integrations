@@ -44,6 +44,7 @@ class GithubTaskService(
 
         val githubIssuesContainer = githubIssuesResponse.readEntity(Array<GithubIssue>::class.java)
 
+        // TODO: zip with issue's body?
         val prsFutures = githubIssuesContainer
                 .map { it.pull_request?.url }
                 .filterNotNull()
@@ -54,6 +55,7 @@ class GithubTaskService(
                 .map { pr: GithubPRResponse -> BVTask(
                     id = pr.id,
                     title = pr.title,
+                    description = pr.body,
                     updated = dateTimeFormat.parse(pr.updated_at),
                     created = dateTimeFormat.parse(pr.created_at),
                     httpUrl = pr.html_url,
@@ -63,7 +65,7 @@ class GithubTaskService(
     }
 
     private fun extractTerms(pr: GithubPRResponse): List<BVTerm> {
-        return tokenizer.tokenize(pr.title)
+        return tokenizer.tokenize(pr.title) + tokenizer.tokenize(pr.body?:"")
     }
 
     private fun getIssueState(status: String) =
@@ -75,7 +77,7 @@ class GithubTaskService(
 
     private fun getPullRequest(prUrl: String): GithubPRResponse {
         val prResponse = getTarget(prUrl).request().get();
-
+        //println(prResponse.readEntity(String::class.java))
         return prResponse.readEntity(GithubPRResponse::class.java)
     }
 

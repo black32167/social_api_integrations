@@ -10,7 +10,8 @@ class BVTask (
         val updated: Date,
         val created: Date,
         val httpUrl: String,
-        val priority: Int
+        val priority: Int,
+        val description: String? = ""
 ) : Document {
     private val elevatedTerms = ElevatedTerms()
 

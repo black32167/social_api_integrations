@@ -5,5 +5,6 @@ class GithubPRResponse (
         val updated_at : String,
         val created_at : String,
         val html_url: String,
-        val title : String
+        val title : String,
+        val body: String?
 )

@@ -3,11 +3,14 @@ package org.social.integrations.birdview.source.trello
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
+import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.trello.model.TrelloCard
 import org.social.integrations.birdview.source.trello.model.TrelloCardsSearchResponse
 import org.social.integrations.tools.WebTargetFactory
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.inject.Named
 
@@ -26,10 +29,11 @@ class TrelloTaskService(
             .queryParam("key", trelloConfig.key)
             .queryParam("token", trelloConfig.token)
 
-    override fun getTasks(status: String): List<BVTask> {
+    override fun getTasks(request: TasksRequest): List<BVTask> {
+        val status = request.status
         val listName = getList(status)
         val trelloIssuesResponse = trelloRestTarget.path("search")
-                .queryParam("query", "@me list:\"${listName}\" sort:edited")
+                .queryParam("query", "@me list:\"${listName}\" edited:${getDaysBackFromNow(request.since)} sort:edited")
                 .queryParam("partial", true)
                 .queryParam("cards_limit", sourceConfig.getMaxResult())
                 .request()
@@ -50,6 +54,9 @@ class TrelloTaskService(
         ).also { it.addTerms(extractTerms(card)) } }
         return tasks
     }
+
+    private fun getDaysBackFromNow(since: ZonedDateTime): Int =
+        ChronoUnit.DAYS.between(since, ZonedDateTime.now()).toInt()
 
     private fun getList(status: String): String? = when (status) {
         "done" -> "Done"

@@ -3,8 +3,10 @@ package org.social.integrations.birdview.source.jira
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
+import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.jira.model.JiraIssue
+import java.time.format.DateTimeFormatter
 import javax.inject.Named
 
 @Named
@@ -16,14 +18,20 @@ class JiraTaskService(
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private val jiraConfig = jiraConfigProvider.getJira()
 
-    override fun getTasks(status: String): List<BVTask> {
+    override fun getTasks(request: TasksRequest): List<BVTask> {
+        val status = request.status
         val issueStatus = getIssueStatus(status)
         if(issueStatus == null) {
             return listOf()
         }
 
-        val jiraIssues = jiraClient.findIssues(
-                "(assignee = currentUser() or watcher = currentUser()) and status in (\"${issueStatus}\") order by lastViewed DESC")
+        val jql = "(" +
+                "assignee = currentUser() or " +
+                "watcher = currentUser()) and " +
+                "status in (\"${issueStatus}\") and " +
+                "updatedDate > \"${request.since.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))}\" " +
+                "order by lastViewed DESC"
+        val jiraIssues = jiraClient.findIssues(jql)
 
         val tasks = jiraIssues.map { issue -> BVTask(
             id = issue.key,

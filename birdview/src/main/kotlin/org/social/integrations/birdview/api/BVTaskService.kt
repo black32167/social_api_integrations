@@ -5,6 +5,7 @@ import org.social.integrations.birdview.analysis.TfIdfCalclulator
 import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTaskGroup
+import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.github.GithubTaskService
 import org.social.integrations.birdview.source.jira.JiraTaskService
@@ -25,14 +26,14 @@ class BVTaskService(
     private val executor = Executors.newFixedThreadPool(3, BVConcurrentUtils.getDaemonThreadFactory())
     private val tfIdfCalclulator = TfIdfCalclulator()
 
-    fun getTaskGroups(status: String, grouping: Boolean, groupingThreshold: Double): List<BVTaskGroup> {
+    fun getTaskGroups(request: TasksRequest): List<BVTaskGroup> {
         val groups = mutableListOf<BVTaskGroup>()
         val tasks = mutableListOf<BVTask>()
         val start = System.currentTimeMillis()
         val sources = listOf<BVTaskSource>(jira, trello, github)
 
         val futures = sources.map { source ->
-            executor.submit(Callable<List<BVTask>> { source.getTasks(status) })
+            executor.submit(Callable<List<BVTask>> { source.getTasks(request) })
         }
         for (future in futures) {
             try {
@@ -55,7 +56,7 @@ class BVTaskService(
         }
 
         for(task in tasks) {
-            if(!(grouping && addToGroup(groups, task, groupingThreshold))) {
+            if(!(request.grouping && addToGroup(groups, task, request.groupingThreshold))) {
                 groups.add(newGroup(task))
             }
         }

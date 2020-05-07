@@ -3,6 +3,7 @@ package org.social.integrations.birdview.source.github
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
+import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.github.model.GithubIssue
@@ -10,6 +11,7 @@ import org.social.integrations.birdview.source.github.model.GithubPRResponse
 import org.social.integrations.birdview.utils.BVConcurrentUtils
 import org.social.integrations.tools.WebTargetFactory
 import social.api.server.auth.BasicAuth
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import javax.inject.Named
@@ -25,7 +27,8 @@ class GithubTaskService(
     private val githibConfig = githubConfigProvider.getGithub()
     private val githubRestTarget = getTarget(githibConfig.baseUrl)
 
-    override fun getTasks(status: String): List<BVTask> {
+    override fun getTasks(request: TasksRequest): List<BVTask> {
+        val status = request.status
         val issueState = getIssueState(status)
         if(issueState == null) {
             return listOf()
@@ -35,6 +38,7 @@ class GithubTaskService(
                 .queryParam("filter", "created")
                 .queryParam("state", issueState)
                 .queryParam("per_page", sourceConfig.getMaxResult())
+                .queryParam("since", request.since.format(DateTimeFormatter.ISO_DATE_TIME))
                 .request()
                 .get()
 

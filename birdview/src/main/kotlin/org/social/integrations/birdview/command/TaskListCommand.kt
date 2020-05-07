@@ -50,9 +50,9 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
     fun printTaskGroups(tasksGroup:List<BVTaskGroup>) {
         tasksGroup.forEach { group->
             if(noItems) {
-                println(">>> ${group.title}")
+                println("[${group.title}]")
             } else if (group.tasks.size > 1) {
-                println(">>> ${group.title}")
+                println("[${group.title}]")
                 group.tasks.forEach { task ->
                     println("    ${describe(task)}")
                 }

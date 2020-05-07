@@ -6,7 +6,7 @@ list of recently done (or planned) activities.
 The tool also can try to group related activities together using 
 [TF-IDF](https://en.wikipedia.org/wiki/Tf–idf) - based approach to determine degree of relatedness between activities.
 
-There are following types of activity item types supported:
+The following types of activity items are supported:
  - jira tickets
  - trello cards
  - Github pull requests

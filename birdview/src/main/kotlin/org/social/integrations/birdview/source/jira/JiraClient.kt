@@ -14,11 +14,16 @@ class JiraClient(
         jiraConfigProvider: BVJiraConfigProvider,
         val sourceConfig: SourceConfig) {
     private val jiraConfig = jiraConfigProvider.getJira()
-    private val jiraRestTarget = WebTargetFactory(jiraConfig.baseUrl) {
-        BasicAuth(jiraConfig.user, jiraConfig.token)
-    }.getTarget("/rest/api/2")
 
     fun findIssues(jql: String): Array<JiraIssue> {
+        if(jiraConfig == null) {
+            return arrayOf()
+        }
+
+        val jiraRestTarget = WebTargetFactory(jiraConfig.baseUrl) {
+            BasicAuth(jiraConfig.user, jiraConfig.token)
+        }.getTarget("/rest/api/2")
+
         val jiraIssuesResponse = jiraRestTarget.path("search").request().post(Entity.json(JiraIssuesFilterRequest(
                 maxResults = sourceConfig.getMaxResult(),
                 fields = arrayOf("*all"),

@@ -17,9 +17,9 @@ class BVSourcesConfigProvider(@Value("\${config.location}") val sourcesConfigFil
 }
 
 class BVSourcesConfig (
-    val jira: BVJiraConfig,
-    val trello: BVTrelloConfig,
-    val github: BVGithubConfig
+    val jira: BVJiraConfig?,
+    val trello: BVTrelloConfig?,
+    val github: BVGithubConfig?
 )
 
 class BVJiraConfig (

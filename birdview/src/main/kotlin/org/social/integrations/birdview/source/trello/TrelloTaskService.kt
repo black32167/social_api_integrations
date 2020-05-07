@@ -1,6 +1,7 @@
 package org.social.integrations.birdview.source.trello
 
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.config.BVTrelloConfig
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
@@ -22,16 +23,19 @@ class TrelloTaskService(
 ) : BVTaskSource {
     //private val dateTimeFormat = DateTimeFormatter.ISO_DATE_TIME//java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")2020-04-29T04:12:34.125Z
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-
-    private val trelloConfig = trelloConfigProvider.getTrello()
-    private val trelloRestTarget = WebTargetFactory(trelloConfig.baseUrl)
-            .getTarget("/1")
-            .queryParam("key", trelloConfig.key)
-            .queryParam("token", trelloConfig.token)
+    private val trelloConfig: BVTrelloConfig? = trelloConfigProvider.getTrello()
 
     override fun getTasks(request: TasksRequest): List<BVTask> {
         val status = request.status
         val listName = getList(status)
+        if(listName == null || trelloConfig == null) {
+            return listOf()
+        }
+
+        val trelloRestTarget = WebTargetFactory(trelloConfig.baseUrl)
+                .getTarget("/1")
+                .queryParam("key", trelloConfig.key)
+                .queryParam("token", trelloConfig.token)
         val trelloIssuesResponse = trelloRestTarget.path("search")
                 .queryParam("query", "@me list:\"${listName}\" edited:${getDaysBackFromNow(request.since)} sort:edited")
                 .queryParam("partial", true)

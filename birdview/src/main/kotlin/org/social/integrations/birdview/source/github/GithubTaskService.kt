@@ -1,6 +1,7 @@
 package org.social.integrations.birdview.source.github
 
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.config.BVGithubConfig
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
@@ -24,16 +25,16 @@ class GithubTaskService(
 ): BVTaskSource {
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
     private val executor = Executors.newCachedThreadPool(BVConcurrentUtils.getDaemonThreadFactory())
-    private val githibConfig = githubConfigProvider.getGithub()
-    private val githubRestTarget = getTarget(githibConfig.baseUrl)
+    private val githibConfig:BVGithubConfig? = githubConfigProvider.getGithub()
 
     override fun getTasks(request: TasksRequest): List<BVTask> {
         val status = request.status
         val issueState = getIssueState(status)
-        if(issueState == null) {
+        if(issueState == null || githibConfig == null) {
             return listOf()
         }
 
+        val githubRestTarget = getTarget(githibConfig.baseUrl)
         val githubIssuesResponse = githubRestTarget.path("issues")
                 .queryParam("filter", "created")
                 .queryParam("state", issueState)
@@ -87,6 +88,6 @@ class GithubTaskService(
 
     private fun getTarget(url: String) =
         WebTargetFactory(url) {
-            BasicAuth(githibConfig.user, githibConfig.token)
+            BasicAuth(githibConfig!!.user, githibConfig.token)
         }.getTarget("")
 }

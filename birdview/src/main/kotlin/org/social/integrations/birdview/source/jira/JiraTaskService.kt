@@ -1,6 +1,7 @@
 package org.social.integrations.birdview.source.jira
 
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.config.BVJiraConfig
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
@@ -16,12 +17,12 @@ class JiraTaskService(
         jiraConfigProvider: BVJiraConfigProvider
 ): BVTaskSource {
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-    private val jiraConfig = jiraConfigProvider.getJira()
+    private val jiraConfig: BVJiraConfig? = jiraConfigProvider.getJira()
 
     override fun getTasks(request: TasksRequest): List<BVTask> {
         val status = request.status
         val issueStatus = getIssueStatus(status)
-        if(issueStatus == null) {
+        if(issueStatus == null || jiraConfig == null) {
             return listOf()
         }
 

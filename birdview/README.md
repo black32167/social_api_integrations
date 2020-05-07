@@ -34,8 +34,12 @@ To use the tool you need to configure access to sources of your features in form
     "token" : "your-personal-github-token"
   }
 }
-
 ```
+To find out how to generate tokenhttps://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/ for respective data source please refer the following documentaion:
+- [How To Generate Access Token For Github](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) 
+- [How To Generate Access Token For trello](https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/) 
+- [How To Generate Access Token For jira](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) 
+
 ### Running
 
 ```shell script

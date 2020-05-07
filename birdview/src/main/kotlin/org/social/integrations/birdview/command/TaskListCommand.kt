@@ -25,13 +25,19 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
     @CommandLine.Option(names = arrayOf("--noGrouping"), description = arrayOf("Disable tasks grouping"))
     var noGrouping = false
 
+    @CommandLine.Option(names = arrayOf("--groupingThreshold"), description = arrayOf("Grouping threshold"))
+    var groupingThreshold = 0.05
+
     @CommandLine.Option(names = arrayOf("--noItems"), description = arrayOf("Hide items in groups"))
     var noItems = false
 
     override fun call(): Int {
         BVColorUtils.useColors = !noColors
 
-        val taskGroups = taskService.getTaskGroups(status, !noGrouping)
+        val taskGroups = taskService.getTaskGroups(
+                status = status,
+                grouping = !noGrouping,
+                groupingThreshold = groupingThreshold)
 
         println("Listing work in '${BVColorUtils.bold(BVColorUtils.red(status))}' state.")
         println("Today is ${BVColorUtils.bold(dateFormat.format(Date()))}")

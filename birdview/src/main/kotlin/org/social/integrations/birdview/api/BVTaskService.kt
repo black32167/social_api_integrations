@@ -23,10 +23,9 @@ class BVTaskService(
         private val github: GithubTaskService
 )  {
     private val executor = Executors.newFixedThreadPool(3, BVConcurrentUtils.getDaemonThreadFactory())
-    private val proximityMergingThreshold = 0.1
     private val tfIdfCalclulator = TfIdfCalclulator()
 
-    fun getTaskGroups(status: String, grouping: Boolean): List<BVTaskGroup> {
+    fun getTaskGroups(status: String, grouping: Boolean, groupingThreshold: Double): List<BVTaskGroup> {
         val groups = mutableListOf<BVTaskGroup>()
         val tasks = mutableListOf<BVTask>()
         val start = System.currentTimeMillis()
@@ -56,7 +55,7 @@ class BVTaskService(
         }
 
         for(task in tasks) {
-            if(!(grouping && addToGroup(groups, task))) {
+            if(!(grouping && addToGroup(groups, task, groupingThreshold))) {
                 groups.add(newGroup(task))
             }
         }
@@ -82,7 +81,7 @@ class BVTaskService(
         BVTaskGroup().also {it.addTask(task) }
 
     // NOTE: side-effect: sorts groups
-    private fun addToGroup(groups: MutableList<BVTaskGroup>, task: BVTask): Boolean {
+    private fun addToGroup(groups: MutableList<BVTaskGroup>, task: BVTask, proximityMergingThreshold: Double): Boolean {
         var candidateGroup:BVTaskGroup? = null
         var candidateProximity = 0.0
 
@@ -120,9 +119,7 @@ class BVTaskService(
         }. sum())
 
         val cos = groupTaskProdVecSize/(groupVecSize*taskVecSize)
-//        if(cos > 0.01) {
-//            println("[${task.title}-${groupDescriber.describe(group)}]: $cos")
-//        }
+ //       if(cos > 0.01) { println("[${task.title}-${groupDescriber.describe(listOf(group))}]: $cos") }
         return cos
     }
 }

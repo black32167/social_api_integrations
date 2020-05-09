@@ -49,7 +49,8 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
                 status = status,
                 grouping = !noGrouping,
                 groupingThreshold = groupingThreshold,
-                since = sinceDateTime
+                since = sinceDateTime,
+                user = user
                 ))
 
         println("Listing work in '${BVColorUtils.bold(BVColorUtils.red(status))}' state.")

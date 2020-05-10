@@ -23,7 +23,7 @@ class JiraClient(
             "(assignee = ${getUser(filter.userAlias)}" +
                 " or creator = ${getUser(filter.userAlias)}" +
                     ")" +
-                filter.issueStatus.let { " and status in (\"${it}\")" } +
+                (filter.issueStatus?.let { " and status in (\"${it}\")" } ?: "") +
                 filter.since.let {  " and updatedDate >= \"${it.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))}\" " } +
                 " order by lastViewed DESC"
 

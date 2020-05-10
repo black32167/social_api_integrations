@@ -35,16 +35,13 @@ class TrelloTaskService(
     private fun getTasks(request: TasksRequest, trelloConfig: BVTrelloConfig): List<BVTask> {
         val status = request.status
         val listName = getList(status)
-        if(listName == null) {
-            return listOf()
-        }
 
         val trelloRestTarget = WebTargetFactory(trelloConfig.baseUrl)
                 .getTarget("/1")
                 .queryParam("key", trelloConfig.key)
                 .queryParam("token", trelloConfig.token)
         val trelloIssuesResponse = trelloRestTarget.path("search")
-                .queryParam("query", "@${getUser(request.user, trelloConfig.sourceName)} list:\"${listName}\" edited:${getDaysBackFromNow(request.since)} sort:edited")
+                .queryParam("query", getQuery(request, trelloConfig, listName))
                 .queryParam("partial", true)
                 .queryParam("cards_limit", sourceConfig.getMaxResult())
                 .request()
@@ -66,6 +63,12 @@ class TrelloTaskService(
         ).also { it.addTerms(extractTerms(card)) } }
         return tasks
     }
+
+    private fun getQuery(request: TasksRequest, trelloConfig: BVTrelloConfig, listName: String?): String =
+        "@${getUser(request.user, trelloConfig.sourceName)}" +
+                (listName?.let { " list:\"${listName}\"" } ?: "") +
+                " edited:${getDaysBackFromNow(request.since)}" +
+                " sort:edited"
 
     private fun getUser(userAlias: String?, sourceName:String): String =
             if (userAlias == null) "me"

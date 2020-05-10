@@ -23,26 +23,26 @@ class JiraTaskService(
     override fun getTasks(request: TasksRequest): List<BVTask> =
         jiraConfigs.flatMap { config -> getTasks(request, config) }
 
-    private fun getTasks(request: TasksRequest, config: BVJiraConfig): List<BVTask> =
-        getIssueStatus(request.status)
-                ?.let { issueStatus->
-                    val jiraIssues = jiraClientProvider.getJiraClient(config).findIssues(JiraIssuesFilter(
-                            request.user,
-                            issueStatus,
-                            request.since))
+    private fun getTasks(request: TasksRequest, config: BVJiraConfig): List<BVTask> {
+        val jiraIssues = jiraClientProvider.getJiraClient(config).findIssues(JiraIssuesFilter(
+                request.user,
+                getIssueStatus(request.status),
+                request.since))
 
-                    val tasks = jiraIssues.map { issue -> BVTask(
-                            sourceName = config.sourceName,
-                            id = issue.key,
-                            title = issue.fields.summary,
-                            updated = dateTimeFormat.parse(issue.fields.updated),
-                            created = dateTimeFormat.parse(issue.fields.created),
-                            httpUrl = "${config.baseUrl}/browse/${issue.key}",
-                            priority = 1
-                    ).also { it.addTerms(extractTerms(issue)) } }
-                    tasks
-                }
-                ?: listOf()
+        val tasks = jiraIssues.map { issue ->
+            BVTask(
+                    sourceName = config.sourceName,
+                    id = issue.key,
+                    title = issue.fields.summary,
+                    updated = dateTimeFormat.parse(issue.fields.updated),
+                    created = dateTimeFormat.parse(issue.fields.created),
+                    httpUrl = "${config.baseUrl}/browse/${issue.key}",
+                    priority = 1
+            ).also { it.addTerms(extractTerms(issue)) }
+        }
+        return tasks
+    }
+
 
     private fun getIssueStatus(status: String): String? = when (status) {
         "done" -> "Done"

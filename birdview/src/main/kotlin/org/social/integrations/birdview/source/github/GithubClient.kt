@@ -40,7 +40,7 @@ class GithubClient(
             }
             ?: listOf<GithubIssue>()
 
-    fun getRepositoriesPullRequests(issueState: String, since: ZonedDateTime, user:String):List<GithubIssue> =
+    fun getRepositoriesPullRequests(issueState: String, since: ZonedDateTime, user:String?):List<GithubIssue> =
         getConfig()
                 ?.repositories
                 ?.map { repository ->
@@ -59,9 +59,9 @@ class GithubClient(
                 ?.path("search")
                 ?.path("issues")
                 ?.queryParam("q", getFilterQuery(filter))
-                ?.also {
-                    println("Url:${it.uri}")
-                }
+//                ?.also {
+//                    println("Url:${it.uri}")
+//                }
                 ?.request()
                 ?.get()
                 ?.also {
@@ -77,13 +77,14 @@ class GithubClient(
 
     private fun getFilterQuery(filter: GithubIssuesFilter): String =
             "type:pr" +
-            (filter.prState?.let {" state:${it}"} ?: "") +
+            (filter.prState.takeIf { it != "any" }?.let {" state:${it}"} ?: "") +
             (filter.repository?.let { " repo:${it}" } ?: "") +
             filter.userAlias.let { " author:${getGithubUser(it)}" } +
             (filter.since?.let { " updated:>=${it.format(DateTimeFormatter.ISO_LOCAL_DATE)}" } ?: "")
 
-    private fun getGithubUser(userAlias: String): String? =
-            usersConfigProvider.getUserName(userAlias, githubConfig.sourceName)
+    private fun getGithubUser(userAlias: String?): String? =
+            if (userAlias == null) "@me"
+            else usersConfigProvider.getUserName(userAlias, githubConfig.sourceName)
 
     private fun getUserIdByEMail(email: String): String =
             getTarget()

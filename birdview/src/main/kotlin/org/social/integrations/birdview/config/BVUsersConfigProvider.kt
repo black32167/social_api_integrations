@@ -8,12 +8,13 @@ class BVUsersConfigProvider(
         private val bvRuntimeConfig: BVRuntimeConfig,
         private val jsonDeserializer: JsonDeserializer
 ) {
-    fun getUserName(userAlias: String, sourceName: String): String? =
+    fun getUserName(userAlias: String, sourceName: String): String =
             getConfig()
                     .find { it.alias == userAlias }
                     ?.sources
                     ?.find { it.sourceName == sourceName }
                     ?.sourceUserName
+                    ?: throw RuntimeException("Cannot find user for alias '${userAlias}' and source '${sourceName}'")
 
     private fun getConfig(): Array<BVUserSourcesConfig> = try {
         jsonDeserializer.deserialize(bvRuntimeConfig.usersConfigFileName)

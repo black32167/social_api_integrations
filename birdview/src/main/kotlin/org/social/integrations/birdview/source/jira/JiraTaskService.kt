@@ -8,7 +8,6 @@ import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.jira.model.JiraIssue
-import java.time.format.DateTimeFormatter
 import javax.inject.Named
 
 @Named
@@ -27,13 +26,10 @@ class JiraTaskService(
     private fun getTasks(request: TasksRequest, config: BVJiraConfig): List<BVTask> =
         getIssueStatus(request.status)
                 ?.let { issueStatus->
-                    val jql = "(" +
-                            "assignee = currentUser() or " +
-                            "watcher = currentUser()) and " +
-                            "status in (\"${issueStatus}\") and " +
-                            "updatedDate > \"${request.since.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))}\" " +
-                            "order by lastViewed DESC"
-                    val jiraIssues = jiraClientProvider.getJiraClient(config).findIssues(jql)
+                    val jiraIssues = jiraClientProvider.getJiraClient(config).findIssues(JiraIssuesFilter(
+                            request.user,
+                            issueStatus,
+                            request.since))
 
                     val tasks = jiraIssues.map { issue -> BVTask(
                             sourceName = config.sourceName,

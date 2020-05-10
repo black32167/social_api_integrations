@@ -81,7 +81,6 @@ class GithubClient(
 
     private fun getGithubUser(userAlias: String): String? =
             usersConfigProvider.getUserName(userAlias, githubConfig.sourceName)
-                    ?: throw java.lang.RuntimeException("Cannot find github user for alias ${userAlias}")
 
     private fun getUserIdByEMail(email: String): String =
             getTarget()

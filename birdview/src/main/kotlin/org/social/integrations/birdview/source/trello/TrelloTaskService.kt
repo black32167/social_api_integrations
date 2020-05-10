@@ -3,6 +3,7 @@ package org.social.integrations.birdview.source.trello
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.config.BVTrelloConfig
+import org.social.integrations.birdview.config.BVUsersConfigProvider
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
@@ -20,7 +21,8 @@ import javax.inject.Named
 class TrelloTaskService(
         val sourcesConfigProvider: BVSourcesConfigProvider,
         val tokenizer: TextTokenizer,
-        val sourceConfig: BVTaskListsDefaults
+        val sourceConfig: BVTaskListsDefaults,
+        val userConfigProvider: BVUsersConfigProvider
 ) : BVTaskSource {
     //private val dateTimeFormat = DateTimeFormatter.ISO_DATE_TIME//java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")2020-04-29T04:12:34.125Z
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -42,7 +44,7 @@ class TrelloTaskService(
                 .queryParam("key", trelloConfig.key)
                 .queryParam("token", trelloConfig.token)
         val trelloIssuesResponse = trelloRestTarget.path("search")
-                .queryParam("query", "@me list:\"${listName}\" edited:${getDaysBackFromNow(request.since)} sort:edited")
+                .queryParam("query", "@${getUser(request.user, trelloConfig.sourceName)} list:\"${listName}\" edited:${getDaysBackFromNow(request.since)} sort:edited")
                 .queryParam("partial", true)
                 .queryParam("cards_limit", sourceConfig.getMaxResult())
                 .request()
@@ -64,6 +66,10 @@ class TrelloTaskService(
         ).also { it.addTerms(extractTerms(card)) } }
         return tasks
     }
+
+    private fun getUser(userAlias: String?, sourceName:String): String =
+            if (userAlias == null) "me"
+            else userConfigProvider.getUserName(userAlias, sourceName)
 
     private fun getDaysBackFromNow(since: ZonedDateTime): Int =
         ChronoUnit.DAYS.between(since, ZonedDateTime.now()).toInt()

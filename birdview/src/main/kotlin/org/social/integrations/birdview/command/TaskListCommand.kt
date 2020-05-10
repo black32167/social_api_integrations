@@ -6,9 +6,12 @@ import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTaskGroup
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.utils.BVColorUtils
+import org.social.integrations.birdview.utils.BVColorUtils.bold
 import picocli.CommandLine
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Callable
 
@@ -37,12 +40,12 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
     var user:String? = null
 
     @CommandLine.Option(names = ["--daysBack"], description = ["Days back"])
-    var daysBack:Long? = null
+    var daysBack:Long = 2
 
     override fun call(): Int {
         BVColorUtils.useColors = !noColors
 
-        val sinceDateTime = ZonedDateTime.now().minusDays(daysBack ?: 2)
+        val sinceDateTime = ZonedDateTime.now().minusDays(daysBack)
 
         val taskGroups = taskService.getTaskGroups(
                 TasksRequest(
@@ -53,8 +56,11 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
                 user = user
                 ))
 
-        println("Listing work in '${BVColorUtils.bold(BVColorUtils.red(status))}' state.")
-        println("Today is ${BVColorUtils.bold(dateFormat.format(Date()))}")
+        println("Listing work in '${bold(BVColorUtils.red(status))}' state.")
+        val now = LocalDate.now()
+        println("Activity for the last ${bold(daysBack.toString())} days (" +
+                "from ${bold(sinceDateTime.minusDays(daysBack).format(DateTimeFormatter.ISO_LOCAL_DATE))} " +
+                "to ${bold(now.format(DateTimeFormatter.ISO_LOCAL_DATE))})")
         println("")
         printTaskGroups(taskGroups)
 

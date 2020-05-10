@@ -1,6 +1,7 @@
 package org.social.integrations.birdview.source.github
 
 import org.social.integrations.birdview.config.BVGithubConfig
+import org.social.integrations.birdview.config.BVUsersConfigProvider
 import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.github.model.GithubIssue
 import org.social.integrations.birdview.source.github.model.GithubPRResponse
@@ -15,7 +16,8 @@ import java.util.concurrent.Executors
 
 class GithubClient(
         val githubConfig: BVGithubConfig,
-        val sourceConfig: BVTaskListsDefaults
+        val sourceConfig: BVTaskListsDefaults,
+        val usersConfigProvider: BVUsersConfigProvider
 ) {
     private val executor = Executors.newCachedThreadPool(BVConcurrentUtils.getDaemonThreadFactory())
 
@@ -74,8 +76,12 @@ class GithubClient(
             "type:pr" +
                 filter.prState?.let {" state:${it}"} +
                 filter.repository?.let { " repo:${it}" } +
-                filter.user.let { " author:${it}" } +
+                filter.userAlias.let { " author:${getGithubUser(it)}" } +
                 filter.since?.let { " updated:>=${it.format(DateTimeFormatter.ISO_LOCAL_DATE)}" }
+
+    private fun getGithubUser(userAlias: String): String? =
+            usersConfigProvider.getUserName(userAlias, githubConfig.sourceName)
+                    ?: throw java.lang.RuntimeException("Cannot find github user for alias ${userAlias}")
 
     private fun getUserIdByEMail(email: String): String =
             getTarget()

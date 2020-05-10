@@ -6,7 +6,6 @@ import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
-import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.github.model.GithubIssue
 import javax.inject.Named
@@ -15,8 +14,7 @@ import javax.inject.Named
 class GithubTaskService(
         val sourcesConfigProvider: BVSourcesConfigProvider,
         val githubClientProvider: GithubClientProvider,
-        val tokenizer: TextTokenizer,
-        val sourceConfig: BVTaskListsDefaults
+        val tokenizer: TextTokenizer
 ): BVTaskSource {
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
@@ -46,8 +44,6 @@ class GithubTaskService(
                 ).also { it.addTerms(extractTerms(pr)) } }
                  ?: listOf()
 
-
-
     private fun extractTerms(pr: GithubIssue): List<BVTerm> {
         return tokenizer.tokenize(pr.title) + tokenizer.tokenize(pr.body?:"")
     }
@@ -58,7 +54,4 @@ class GithubTaskService(
             "progress" ->  "open"
             else -> null
         }
-
-
-
 }

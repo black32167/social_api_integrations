@@ -10,24 +10,25 @@ class BVUsersConfigProvider(
 ) {
     fun getUserName(userAlias: String, sourceName: String): String? =
             getConfig()
-                    .find { it.sourceName == sourceName }
-                    ?.users
-                    ?.find { it.alias == userAlias }
+                    .find { it.alias == userAlias }
+                    ?.sources
+                    ?.find { it.sourceName == sourceName }
                     ?.sourceUserName
 
-    private fun getConfig(): Array<UserSourcesConfig> = try {
-        jsonDeserializer.deserialize(bvRuntimeConfig.sourcesConfigFileName)
+    private fun getConfig(): Array<BVUserSourcesConfig> = try {
+        jsonDeserializer.deserialize(bvRuntimeConfig.usersConfigFileName)
     } catch (e: Exception) {
+        e.printStackTrace()
         arrayOf()
     }
 }
 
-class UserSourcesConfig(
-        val sourceName: String,
-        val users: Array<BVUserConfig>
+class BVUserSourcesConfig(
+        val alias: String, // user alias
+        val sources: Array<BVUserSourceConfig>
 )
 
-class BVUserConfig (
-        val alias: String,
+class BVUserSourceConfig (
+        val sourceName: String,
         val sourceUserName: String
 )

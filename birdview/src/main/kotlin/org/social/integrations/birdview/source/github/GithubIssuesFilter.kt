@@ -6,5 +6,5 @@ class GithubIssuesFilter (
         val repository:String?,
         val prState: String?,
         val since: ZonedDateTime?,
-        val user:String
+        val userAlias:String
 )

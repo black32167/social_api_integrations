@@ -20,8 +20,9 @@ class JiraClient(
             findIssues(getJql(filter))
 
     private fun getJql(filter: JiraIssuesFilter): String =
-            "(assignee = ${getUser(filter.userAlias)} or " +
-                "watcher = ${getUser(filter.userAlias)})" +
+            "(assignee = ${getUser(filter.userAlias)}" +
+               // " or watcher = ${getUser(filter.userAlias)}" +
+                    ")" +
                 filter.issueStatus.let { " and status in (\"${it}\")" } +
                 filter.since.let {  " and updatedDate > \"${it.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))}\" " } +
                 " order by lastViewed DESC"

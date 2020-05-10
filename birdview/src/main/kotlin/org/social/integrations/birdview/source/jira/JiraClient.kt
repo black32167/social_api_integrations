@@ -21,10 +21,10 @@ class JiraClient(
 
     private fun getJql(filter: JiraIssuesFilter): String =
             "(assignee = ${getUser(filter.userAlias)}" +
-               // " or watcher = ${getUser(filter.userAlias)}" +
+                " or creator = ${getUser(filter.userAlias)}" +
                     ")" +
                 filter.issueStatus.let { " and status in (\"${it}\")" } +
-                filter.since.let {  " and updatedDate > \"${it.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))}\" " } +
+                filter.since.let {  " and updatedDate >= \"${it.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))}\" " } +
                 " order by lastViewed DESC"
 
     private fun getUser(userAlias: String?): String =

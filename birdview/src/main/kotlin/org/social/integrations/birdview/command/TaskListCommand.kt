@@ -59,7 +59,7 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
         println("Listing work in '${bold(BVColorUtils.red(status))}' state.")
         val now = LocalDate.now()
         println("Activity for the last ${bold(daysBack.toString())} days (" +
-                "from ${bold(sinceDateTime.minusDays(daysBack).format(DateTimeFormatter.ISO_LOCAL_DATE))} " +
+                "from ${bold(sinceDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE))} " +
                 "to ${bold(now.format(DateTimeFormatter.ISO_LOCAL_DATE))})")
         println("")
         printTaskGroups(taskGroups)

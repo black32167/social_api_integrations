@@ -6,6 +6,6 @@ COPY . /opt/birdview/
 
 # Path to config
 RUN mkdir /config
-ENV CONFIG_LOCATION="/config/bv.json"
+ENV CONFIG_LOCATION="/config"
 
 ENTRYPOINT ["/opt/birdview/birdview.sh"]

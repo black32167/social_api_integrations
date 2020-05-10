@@ -1,31 +1,24 @@
 package org.social.integrations.birdview.source.jira
 
-import org.social.integrations.birdview.source.SourceConfig
+import org.social.integrations.birdview.config.BVJiraConfig
+import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.jira.model.JiraIssue
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterRequest
 import org.social.integrations.birdview.source.jira.model.JiraIssuesFilterResponse
 import org.social.integrations.tools.WebTargetFactory
 import social.api.server.auth.BasicAuth
-import javax.inject.Named
 import javax.ws.rs.client.Entity
 
-@Named
 class JiraClient(
-        jiraConfigProvider: BVJiraConfigProvider,
-        val sourceConfig: SourceConfig) {
-    private val jiraConfig = jiraConfigProvider.getJira()
-
+        private val jiraConfig: BVJiraConfig,
+        private val taskListDefaults: BVTaskListsDefaults) {
     fun findIssues(jql: String): Array<JiraIssue> {
-        if(jiraConfig == null) {
-            return arrayOf()
-        }
-
         val jiraRestTarget = WebTargetFactory(jiraConfig.baseUrl) {
             BasicAuth(jiraConfig.user, jiraConfig.token)
         }.getTarget("/rest/api/2")
 
         val jiraIssuesResponse = jiraRestTarget.path("search").request().post(Entity.json(JiraIssuesFilterRequest(
-                maxResults = sourceConfig.getMaxResult(),
+                maxResults = taskListDefaults.getMaxResult(),
                 fields = arrayOf("*all"),
                 jql = jql
         )))

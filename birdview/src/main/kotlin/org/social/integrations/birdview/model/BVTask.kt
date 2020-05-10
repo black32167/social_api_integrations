@@ -5,6 +5,7 @@ import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
 import java.util.*
 
 class BVTask (
+        val sourceName: String,
         val id: String,
         val title: String,
         val updated: Date,

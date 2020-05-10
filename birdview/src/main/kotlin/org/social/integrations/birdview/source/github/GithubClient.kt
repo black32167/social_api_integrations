@@ -1,7 +1,7 @@
 package org.social.integrations.birdview.source.github
 
 import org.social.integrations.birdview.config.BVGithubConfig
-import org.social.integrations.birdview.source.SourceConfig
+import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.github.model.GithubIssue
 import org.social.integrations.birdview.source.github.model.GithubPRResponse
 import org.social.integrations.birdview.source.github.model.GithubSearchIssuesResponse
@@ -12,12 +12,10 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
-import javax.inject.Named
 
-@Named
 class GithubClient(
-        val githubConfigProvider: BVGithubConfigProvider,
-        val sourceConfig: SourceConfig
+        val githubConfig: BVGithubConfig,
+        val sourceConfig: BVTaskListsDefaults
 ) {
     private val executor = Executors.newCachedThreadPool(BVConcurrentUtils.getDaemonThreadFactory())
 
@@ -102,7 +100,7 @@ class GithubClient(
                     }
                     .map { it.get() }
 
-    private fun getConfig(): BVGithubConfig?  = githubConfigProvider.getGithub()
+    private fun getConfig(): BVGithubConfig?  = githubConfig
 
     fun getPullRequest(prUrl: String): GithubPRResponse? =
             getTarget(prUrl)

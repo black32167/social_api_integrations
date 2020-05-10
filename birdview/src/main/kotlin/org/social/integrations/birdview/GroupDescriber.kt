@@ -1,12 +1,17 @@
 package org.social.integrations.birdview
 
+import org.social.integrations.birdview.config.BVJiraConfig
+import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.model.BVTaskGroup
-import org.social.integrations.birdview.source.jira.JiraClient
+import org.social.integrations.birdview.source.jira.JiraClientProvider
 import javax.inject.Named
 import kotlin.math.min
 
 @Named
-class GroupDescriber(val jiraClient: JiraClient) {
+class GroupDescriber(
+        private val jiraClientProvider: JiraClientProvider,
+        private var sourcesConfigProvider: BVSourcesConfigProvider
+) {
     private val jiraKeyPattern = "\\w+-\\d+".toRegex()
     private val urlPattern = "http[s]*://.*".toRegex()
 
@@ -30,10 +35,13 @@ class GroupDescriber(val jiraClient: JiraClient) {
 
         // Rewrite titles with Jira issues summaries
         if(!jiraGroups.isEmpty()) {
-            val issues = jiraClient.loadIssues(jiraGroups.keys.toList())
-            for (issue in issues) {
-                jiraGroups[issue.key]?.forEach { it.title = issue.fields.summary }
-            }
+            // TODO: parallelize
+            sourcesConfigProvider.getConfigsOfType(BVJiraConfig::class.java)
+                    .map { jiraConfig->jiraClientProvider.getJiraClient(jiraConfig) }
+                    .flatMap { jiraClient->jiraClient.loadIssues(jiraGroups.keys.toList()).toList() }
+                    .forEach { issue->
+                        jiraGroups[issue.key]?.forEach { it.title = issue.fields.summary }
+                    }
         }
     }
 }

@@ -1,33 +1,41 @@
 package org.social.integrations.birdview.source.github
 
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.config.BVGithubConfig
+import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
+import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.BVTaskSource
-import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.github.model.GithubIssue
 import javax.inject.Named
 
 @Named
 class GithubTaskService(
-        val githubClient: GithubClient,
+        val sourcesConfigProvider: BVSourcesConfigProvider,
+        val githubClientProvider: GithubClientProvider,
         val tokenizer: TextTokenizer,
-        val sourceConfig: SourceConfig
+        val sourceConfig: BVTaskListsDefaults
 ): BVTaskSource {
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
-
+    // TODO: parallelize
     override fun getTasks(request: TasksRequest): List<BVTask> =
+            sourcesConfigProvider.getConfigsOfType(BVGithubConfig::class.java)
+                    .flatMap { config-> getTasks(request, config) }
+
+    private fun getTasks(request: TasksRequest, githubConfig:BVGithubConfig): List<BVTask> =
          getIssueState(request.status)
                 ?.let { issueState ->
                     if (request.user == null) {
-                        githubClient.getCurrentUserIssues(issueState, request.since)
+                        githubClientProvider.getGithubClient(githubConfig).getCurrentUserIssues(issueState, request.since)
                     } else {
-                        githubClient.getRepositoriesPullRequests(issueState, request.since, request.user)
+                        githubClientProvider.getGithubClient(githubConfig).getRepositoriesPullRequests(issueState, request.since, request.user)
                     }
                 }
                 ?.map { pr: GithubIssue -> BVTask(
+                    sourceName = githubConfig.sourceName,
                     id = pr.id,
                     title = pr.title,
                     description = pr.body,

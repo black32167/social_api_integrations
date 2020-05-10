@@ -1,12 +1,13 @@
 package org.social.integrations.birdview.source.trello
 
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
+import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.config.BVTrelloConfig
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
+import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.BVTaskSource
-import org.social.integrations.birdview.source.SourceConfig
 import org.social.integrations.birdview.source.trello.model.TrelloCard
 import org.social.integrations.birdview.source.trello.model.TrelloCardsSearchResponse
 import org.social.integrations.tools.WebTargetFactory
@@ -17,18 +18,22 @@ import javax.inject.Named
 
 @Named
 class TrelloTaskService(
-        trelloConfigProvider: BVTrelloConfigProvider,
+        val sourcesConfigProvider: BVSourcesConfigProvider,
         val tokenizer: TextTokenizer,
-        val sourceConfig: SourceConfig
+        val sourceConfig: BVTaskListsDefaults
 ) : BVTaskSource {
     //private val dateTimeFormat = DateTimeFormatter.ISO_DATE_TIME//java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")2020-04-29T04:12:34.125Z
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    private val trelloConfig: BVTrelloConfig? = trelloConfigProvider.getTrello()
 
-    override fun getTasks(request: TasksRequest): List<BVTask> {
+    // TODO: parallelize
+    override fun getTasks(request: TasksRequest): List<BVTask> =
+            sourcesConfigProvider.getConfigsOfType(BVTrelloConfig::class.java)
+                    .flatMap { config-> getTasks(request, config) }
+
+    private fun getTasks(request: TasksRequest, trelloConfig: BVTrelloConfig): List<BVTask> {
         val status = request.status
         val listName = getList(status)
-        if(listName == null || trelloConfig == null) {
+        if(listName == null) {
             return listOf()
         }
 
@@ -49,12 +54,13 @@ class TrelloTaskService(
         val trelloCardsContainer = trelloIssuesResponse.readEntity(TrelloCardsSearchResponse::class.java)
 
         val tasks = trelloCardsContainer.cards.map { card -> BVTask(
-            id = card.id,
-            title = card.name,
-            updated = parseDate(card.dateLastActivity),
-            created = parseDate(card.dateLastActivity),
-            httpUrl = card.url,
-            priority = 1
+                sourceName = trelloConfig.sourceName,
+                id = card.id,
+                title = card.name,
+                updated = parseDate(card.dateLastActivity),
+                created = parseDate(card.dateLastActivity),
+                httpUrl = card.url,
+                priority = 1
         ).also { it.addTerms(extractTerms(card)) } }
         return tasks
     }

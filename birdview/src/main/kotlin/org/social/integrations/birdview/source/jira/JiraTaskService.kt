@@ -2,6 +2,7 @@ package org.social.integrations.birdview.source.jira
 
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.config.BVJiraConfig
+import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.model.BVTask
 import org.social.integrations.birdview.model.BVTerm
 import org.social.integrations.birdview.request.TasksRequest
@@ -12,38 +13,40 @@ import javax.inject.Named
 
 @Named
 class JiraTaskService(
-        val jiraClient: JiraClient,
-        val tokenizer: TextTokenizer,
-        jiraConfigProvider: BVJiraConfigProvider
+        private val jiraClientProvider: JiraClientProvider,
+        private val tokenizer: TextTokenizer,
+        sourcesConfigProvider: BVSourcesConfigProvider
 ): BVTaskSource {
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-    private val jiraConfig: BVJiraConfig? = jiraConfigProvider.getJira()
+    private val jiraConfigs: List<BVJiraConfig> = sourcesConfigProvider.getConfigsOfType(BVJiraConfig::class.java)
 
-    override fun getTasks(request: TasksRequest): List<BVTask> {
-        val status = request.status
-        val issueStatus = getIssueStatus(status)
-        if(issueStatus == null || jiraConfig == null) {
-            return listOf()
-        }
+    // TODO: parallelize
+    override fun getTasks(request: TasksRequest): List<BVTask> =
+        jiraConfigs.flatMap { config -> getTasks(request, config) }
 
-        val jql = "(" +
-                "assignee = currentUser() or " +
-                "watcher = currentUser()) and " +
-                "status in (\"${issueStatus}\") and " +
-                "updatedDate > \"${request.since.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))}\" " +
-                "order by lastViewed DESC"
-        val jiraIssues = jiraClient.findIssues(jql)
+    private fun getTasks(request: TasksRequest, config: BVJiraConfig): List<BVTask> =
+        getIssueStatus(request.status)
+                ?.let { issueStatus->
+                    val jql = "(" +
+                            "assignee = currentUser() or " +
+                            "watcher = currentUser()) and " +
+                            "status in (\"${issueStatus}\") and " +
+                            "updatedDate > \"${request.since.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))}\" " +
+                            "order by lastViewed DESC"
+                    val jiraIssues = jiraClientProvider.getJiraClient(config).findIssues(jql)
 
-        val tasks = jiraIssues.map { issue -> BVTask(
-            id = issue.key,
-            title = issue.fields.summary,
-            updated = dateTimeFormat.parse(issue.fields.updated),
-            created = dateTimeFormat.parse(issue.fields.created),
-            httpUrl = "${jiraConfig.baseUrl}/browse/${issue.key}",
-            priority = 1
-        ).also { it.addTerms(extractTerms(issue)) } }
-        return tasks
-    }
+                    val tasks = jiraIssues.map { issue -> BVTask(
+                            sourceName = config.sourceName,
+                            id = issue.key,
+                            title = issue.fields.summary,
+                            updated = dateTimeFormat.parse(issue.fields.updated),
+                            created = dateTimeFormat.parse(issue.fields.created),
+                            httpUrl = "${config.baseUrl}/browse/${issue.key}",
+                            priority = 1
+                    ).also { it.addTerms(extractTerms(issue)) } }
+                    tasks
+                }
+                ?: listOf()
 
     private fun getIssueStatus(status: String): String? = when (status) {
         "done" -> "Done"

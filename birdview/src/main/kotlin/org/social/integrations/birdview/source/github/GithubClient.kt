@@ -45,7 +45,10 @@ class GithubClient(
                 ?.repositories
                 ?.map { repository ->
                     executor.submit(Callable {
-                        findIssues(GithubIssuesFilter(repository, issueState, since, user))
+                        findIssues(GithubIssuesFilter(
+                                prState = issueState,
+                                since = since,
+                                userAlias = user))
                     })
                 }
                 ?.flatMap { it.get() }
@@ -74,10 +77,10 @@ class GithubClient(
 
     private fun getFilterQuery(filter: GithubIssuesFilter): String =
             "type:pr" +
-                filter.prState?.let {" state:${it}"} +
-                filter.repository?.let { " repo:${it}" } +
-                filter.userAlias.let { " author:${getGithubUser(it)}" } +
-                filter.since?.let { " updated:>=${it.format(DateTimeFormatter.ISO_LOCAL_DATE)}" }
+            (filter.prState?.let {" state:${it}"} ?: "") +
+            (filter.repository?.let { " repo:${it}" } ?: "") +
+            filter.userAlias.let { " author:${getGithubUser(it)}" } +
+            (filter.since?.let { " updated:>=${it.format(DateTimeFormatter.ISO_LOCAL_DATE)}" } ?: "")
 
     private fun getGithubUser(userAlias: String): String? =
             usersConfigProvider.getUserName(userAlias, githubConfig.sourceName)

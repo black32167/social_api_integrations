@@ -10,7 +10,7 @@ export SH_REGION="${SH_REGION:-ap-southeast-2}"
 export CONFIG_LOCATION
 
 case "${CMD}" in
-    progress|done|planned|blocked)
+    all|progress|done|planned|blocked)
         java ${JAVA_OPTS} \
           -Dconfig.location="${CONFIG_LOCATION}" \
           -cp "./lib/*" \
@@ -18,5 +18,5 @@ case "${CMD}" in
         ;;
     *)
         echo "Usage:"
-        echo "${BASH_SOURCE%/*} {progress|done|planned|blocked} [--noColors] [--noGrouping] [--daysBack <daysBack>]"
+        echo "${BASH_SOURCE%/*} {all|progress|done|planned|blocked} [--noColors] [--noGrouping] [--daysBack <daysBack>]"
 esac

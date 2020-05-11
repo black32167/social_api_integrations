@@ -52,6 +52,5 @@ class BVGithubConfig (
         sourceName: String = "github",
         val baseUrl: String,
         val user: String,
-        val token: String,
-        val repositories: Array<String>
+        val token: String
 ): BVAbstractSourceConfig("github", sourceName)

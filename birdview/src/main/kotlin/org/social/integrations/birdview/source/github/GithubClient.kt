@@ -41,18 +41,10 @@ class GithubClient(
             ?: listOf<GithubIssue>()
 
     fun getRepositoriesPullRequests(issueState: String, since: ZonedDateTime, user:String?):List<GithubIssue> =
-        getConfig()
-                ?.repositories
-                ?.map { repository ->
-                    executor.submit(Callable {
-                        findIssues(GithubIssuesFilter(
-                                prState = issueState,
-                                since = since,
-                                userAlias = user))
-                    })
-                }
-                ?.flatMap { it.get() }
-        ?: listOf()
+        findIssues(GithubIssuesFilter(
+            prState = issueState,
+            since = since,
+            userAlias = user))
 
     private fun findIssues(filter:GithubIssuesFilter):List<GithubIssue> =
         getTarget()

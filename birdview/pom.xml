@@ -13,6 +13,20 @@
     <description>Project provides a birdview on your projects</description>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>

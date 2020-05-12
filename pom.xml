@@ -18,6 +18,7 @@
         <social.api.version>0.0.1</social.api.version>
         <social.api.tools.version>1.0.0</social.api.tools.version>
         <junit-version>4.8.1</junit-version>
+        <lucene.version>8.5.1</lucene.version>
     </properties>
     <build>
         <pluginManagement>
@@ -52,6 +53,21 @@
     </build>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queryparser</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queries</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>

@@ -21,7 +21,7 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
     val dateFormat = SimpleDateFormat("yyyy-MM-dd")
             .also { it.timeZone = TimeZone.getTimeZone("UTC") }
 
-    @CommandLine.Option(names = ["-s", "--status"], description = ["progress|todo|done"])
+    @CommandLine.Option(names = ["-s", "--status"], description = ["any|progress|todo|done"])
     var status = "progress"
 
     @CommandLine.Option(names = ["-n", "--noColors"], description = ["Disable ANSI colors"])

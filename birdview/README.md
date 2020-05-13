@@ -47,7 +47,7 @@ To find out how to generate token please refer the following documentaion:
 Let’s assume that your bv-sources.json config is located in the `${HOME}/.birdview` folder.
 Then you could just run in your terminal (assuming the [docker](https://www.docker.com/products/docker-desktop) is installed):
 ```shell script
-$ docker run --rm -v "${HOME}/.birdview":/config black32167/birdview progress
+$ docker run --rm -v "${HOME}/.birdview":/config black32167/birdview -s progress
 
 2020-05-05 - Document my recent work : https://trello.com/c/xxxxxx/82-document-recent-work
 2020-05-05 - Fixed production issue : https://github.com/MyOrg/repo/pull/14556
@@ -57,10 +57,10 @@ $ docker run --rm -v "${HOME}/.birdview":/config black32167/birdview progress
 ```
 To adjust period of interest, you could use ‘--daysBack’ parameter:
 ```
-$ docker run --rm -v "${HOME}/.birdview":/config black32167/birdview progress --daysBack 14
+$ docker run --rm -v "${HOME}/.birdview":/config black32167/birdview -s progress --daysBack 14
 ```
 
-To retrieve all available items were updated recently use ‘all’ command:
+To retrieve all available items were updated recently use ‘any’ command:
 ```
-$ docker run --rm -v "${HOME}/.birdview":/config black32167/birdview all --daysBack 14
+$ docker run --rm -v "${HOME}/.birdview":/config black32167/birdview -s any --daysBack 14
 ```

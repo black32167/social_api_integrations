@@ -1,10 +1,8 @@
 package org.social.integrations.birdview.api
 
 import org.social.integrations.birdview.GroupDescriber
-import org.social.integrations.birdview.analysis.TfIdfCalclulator
-import org.social.integrations.birdview.analysis.tokenize.ElevatedTerms
-import org.social.integrations.birdview.model.BVTask
-import org.social.integrations.birdview.model.BVTaskGroup
+import org.social.integrations.birdview.analysis.BVDocument
+import org.social.integrations.birdview.model.BVDocumentCollection
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.github.GithubTaskService
@@ -14,7 +12,6 @@ import org.social.integrations.birdview.utils.BVConcurrentUtils
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import javax.inject.Named
-import kotlin.math.sqrt
 
 @Named
 class BVTaskService(
@@ -24,16 +21,16 @@ class BVTaskService(
         private val github: GithubTaskService
 )  {
     private val executor = Executors.newFixedThreadPool(3, BVConcurrentUtils.getDaemonThreadFactory())
-    private val tfIdfCalclulator = TfIdfCalclulator()
+   // private val tfIdfCalclulator = TfIdfCalclulator()
 
-    fun getTaskGroups(request: TasksRequest): List<BVTaskGroup> {
-        val groups = mutableListOf<BVTaskGroup>()
-        val tasks = mutableListOf<BVTask>()
+    fun getTaskGroups(request: TasksRequest): List<BVDocumentCollection> {
+        val groups = mutableListOf<BVDocumentCollection>()
+        val tasks = mutableListOf<BVDocument>()
         val start = System.currentTimeMillis()
         val sources = listOf<BVTaskSource>(jira, trello, github)
 
         val futures = sources.map { source ->
-            executor.submit(Callable<List<BVTask>> { source.getTasks(request) })
+            executor.submit(Callable<List<BVDocument>> { source.getTasks(request) })
         }
         for (future in futures) {
             try {
@@ -46,14 +43,17 @@ class BVTaskService(
         val end = System.currentTimeMillis();
         //println("Request took ${end-start} ms.")
 
-        elevateTerms(tasks)
+        // TODO: collect all Ids
+        // TODO: create initial groups from Ids with tasks (grouping tasks by parent ids)
+
 
         // Sort tasks by update time
         tasks.sortBy { it.updated }
 
-        for(task in tasks) {
-            tfIdfCalclulator.addDoc(task)
-        }
+
+//        for(task in tasks) {
+//            tfIdfCalclulator.addDoc(task)
+//        }
 
         for(task in tasks) {
             if(!(request.grouping && addToGroup(groups, task, request.groupingThreshold))) {
@@ -68,22 +68,12 @@ class BVTaskService(
         return groups;
     }
 
-    private fun elevateTerms(tasks: List<BVTask>) {
-        val elevatedTerms = ElevatedTerms()
-        tasks.forEach {
-            elevatedTerms.addTerms (it.getBVTerms())
-        }
-        tasks.forEach {task->
-            task.updateTerms(elevatedTerms)
-        }
-    }
-
-    private fun newGroup(task: BVTask): BVTaskGroup =
-        BVTaskGroup().also {it.addTask(task) }
+    private fun newGroup(task: BVDocument): BVDocumentCollection =
+        BVDocumentCollection().also {it.addDocument(task) }
 
     // NOTE: side-effect: sorts groups
-    private fun addToGroup(groups: MutableList<BVTaskGroup>, task: BVTask, proximityMergingThreshold: Double): Boolean {
-        var candidateGroup:BVTaskGroup? = null
+    private fun addToGroup(groups: MutableList<BVDocumentCollection>, task: BVDocument, proximityMergingThreshold: Double): Boolean {
+        var candidateGroup:BVDocumentCollection? = null
         var candidateProximity = 0.0
 
         val maxTimeDistanceMs = 1000*60*60*24
@@ -101,7 +91,7 @@ class BVTaskService(
         }
 
         if(candidateGroup != null && candidateProximity > proximityMergingThreshold) {
-            candidateGroup.addTask(task)
+            candidateGroup.addDocument(task)
 
             //Resort groups
             groups.sortBy { it.getLastUpdated() }
@@ -112,15 +102,6 @@ class BVTaskService(
         return false
     }
 
-    private fun calculateSimilarity(group: BVTaskGroup, task: BVTask): Double {
-        val groupVecSize = sqrt(group.getTerms().map { tfIdfCalclulator.calculate(it, group) }.sum())
-        val taskVecSize = sqrt(task.getTerms().map { tfIdfCalclulator.calculate(it, task) }.sum())
-        val groupTaskProdVecSize = sqrt(group.getTerms().map { gTerm->
-            tfIdfCalclulator.calculate(gTerm, group) * tfIdfCalclulator.calculate(gTerm, task);
-        }. sum())
-
-        val cos = groupTaskProdVecSize/(groupVecSize*taskVecSize)
- //       if(cos > 0.01) { println("[${task.title}-${groupDescriber.describe(listOf(group))}]: $cos") }
-        return cos
-    }
+    private fun calculateSimilarity(group: BVDocumentCollection, task: BVDocument): Double =
+        if (task.groupIds.any { group.groupIds.contains(it) }) 1.0 else 0.0
 }

@@ -2,10 +2,10 @@ package org.social.integrations.birdview
 
 import org.social.integrations.birdview.config.BVJiraConfig
 import org.social.integrations.birdview.config.BVSourcesConfigProvider
-import org.social.integrations.birdview.model.BVTaskGroup
+import org.social.integrations.birdview.model.BVDocumentCollection
 import org.social.integrations.birdview.source.jira.JiraClientProvider
+import org.social.integrations.birdview.source.jira.JiraTaskService
 import javax.inject.Named
-import kotlin.math.min
 
 @Named
 class GroupDescriber(
@@ -15,20 +15,16 @@ class GroupDescriber(
     private val jiraKeyPattern = "\\w+-\\d+".toRegex()
     private val urlPattern = "http[s]*://.*".toRegex()
 
-    fun describe(groups: List<BVTaskGroup>) {
-        val jiraGroups = mutableMapOf<String, MutableList<BVTaskGroup>>()
+    fun describe(groups: List<BVDocumentCollection>) {
+        val jiraGroups = mutableMapOf<String, MutableList<BVDocumentCollection>>()
         for(group in groups) {
-            val sortedTerms = group.getTerms()
-                    .toSet()
-                    .filter { !it.contains(" ") && !it.matches(urlPattern) }
-                    .sortedByDescending { group.getTermFrequency(it) }
-            val shortList = sortedTerms.subList(0, min(3, sortedTerms.size))
-            group.title = shortList.map { it.capitalize() }.joinToString(" ")
+            val maybeJIRAKey = group.groupIds
+                    .find { it.type == JiraTaskService.JIRA_KEY_TYPE }
+                    ?.id
 
-            val maybeJIRAKey = shortList.find { it.matches(jiraKeyPattern) }
             if (maybeJIRAKey != null) {
                 jiraGroups
-                        .computeIfAbsent(maybeJIRAKey, { mutableListOf<BVTaskGroup>() })
+                        .computeIfAbsent(maybeJIRAKey, { mutableListOf<BVDocumentCollection>() })
                         .add(group)
             }
         }

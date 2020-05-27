@@ -36,7 +36,8 @@ class JiraClient(
             BasicAuth(jiraConfig.user, jiraConfig.token)
         }.getTarget("/rest/api/2")
 
-        val jiraIssuesResponse = jiraRestTarget.path("search").request().post(Entity.json(JiraIssuesFilterRequest(
+        val jiraIssuesResponse = jiraRestTarget.path("search").request()
+                .post(Entity.json(JiraIssuesFilterRequest(
                 maxResults = taskListDefaults.getMaxResult(),
                 fields = arrayOf("*all"),
                 jql = jql

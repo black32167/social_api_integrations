@@ -13,6 +13,7 @@ class JiraIssueFields (
     val updated: String,
     val created: String,
     val summary: String,
+    val description: String?,
     val customfield_10007: String?, //EPIC key
     val parent: JiraParentIssue?
 )

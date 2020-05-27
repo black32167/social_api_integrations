@@ -1,9 +1,9 @@
 package org.social.integrations.birdview.command
 
 import org.social.integrations.birdview.GroupDescriber
+import org.social.integrations.birdview.analysis.BVDocument
 import org.social.integrations.birdview.api.BVTaskService
-import org.social.integrations.birdview.model.BVTask
-import org.social.integrations.birdview.model.BVTaskGroup
+import org.social.integrations.birdview.model.BVDocumentCollection
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.utils.BVColorUtils
 import org.social.integrations.birdview.utils.BVColorUtils.bold
@@ -69,22 +69,22 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
         return 0
     }
 
-    fun printTaskGroups(tasksGroup:List<BVTaskGroup>) {
+    fun printTaskGroups(tasksGroup:List<BVDocumentCollection>) {
         tasksGroup.forEach { group->
             if(noItems) {
                 println("[${group.title}]")
-            } else if (group.tasks.size > 1) {
+            } else if (group.documents.size > 1) {
                 println("[${group.title}]")
-                group.tasks.forEach { task ->
+                group.documents.forEach { task ->
                     println("    ${describe(task)}")
                 }
             } else {
-                group.tasks.first().also {task->
+                group.documents.first().also { task->
                     println(describe(task))
                 }
             }
         }
     }
 
-    fun describe(task: BVTask)
+    fun describe(task: BVDocument)
             = "${dateFormat.format(task.updated)} - ${BVColorUtils.red(task.title)} : ${task.httpUrl}"}

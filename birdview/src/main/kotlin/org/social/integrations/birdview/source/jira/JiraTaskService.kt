@@ -45,14 +45,14 @@ class JiraTaskService(
                     httpUrl = "${config.baseUrl}/browse/${issue.key}",
                     body = description,
                     refsIds = BVFilters.filterIds(terms),
-                    groupIds = extractGroupIds(issue))
+                    groupIds = extractGroupIds(issue, config.sourceName))
         }
         return tasks
     }
 
-    private fun extractGroupIds(issue: JiraIssue): List<DocumentGroupId> =
-            (issue.fields.customfield_10007?.let { listOf(DocumentGroupId(it, JIRA_KEY_TYPE)) } ?: listOf<DocumentGroupId>()) +
-                    (issue.fields.parent?.let{ listOf(DocumentGroupId(it.key, JIRA_KEY_TYPE)) } ?: listOf<DocumentGroupId>())
+    private fun extractGroupIds(issue: JiraIssue, sourceName: String): List<DocumentGroupId> =
+            (issue.fields.customfield_10007?.let { listOf(DocumentGroupId(it, JIRA_KEY_TYPE, sourceName)) } ?: listOf<DocumentGroupId>()) +
+                    (issue.fields.parent?.let{ listOf(DocumentGroupId(it.key, JIRA_KEY_TYPE, sourceName)) } ?: listOf<DocumentGroupId>())
 
     private fun getIssueStatus(status: String): String? = when (status) {
         "done" -> "Done"

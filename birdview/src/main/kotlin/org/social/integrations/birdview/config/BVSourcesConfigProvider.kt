@@ -18,6 +18,9 @@ class BVSourcesConfigProvider(
 
     private fun getSourceConfigs(): Array<BVAbstractSourceConfig>
             = jsonDeserializer.deserialize(bvRuntimeConfig.sourcesConfigFileName)
+
+    fun getConfigByName(sourceName: String): BVAbstractSourceConfig? =
+        getSourceConfigs().find { it.sourceName == sourceName }
 }
 
 @JsonTypeInfo(

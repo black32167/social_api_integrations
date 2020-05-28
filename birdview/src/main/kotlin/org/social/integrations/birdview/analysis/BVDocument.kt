@@ -14,4 +14,7 @@ open class BVDocument (
         val refsIds: List<String>
 )
 
-data class DocumentGroupId(val id:String,var type:String)
+data class DocumentGroupId(
+        val id:String,
+        val type:String,
+        val sourceName:String)

@@ -87,4 +87,4 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
     }
 
     fun describe(task: BVDocument)
-            = "${dateFormat.format(task.updated)} - ${BVColorUtils.red(task.title)} : ${task.httpUrl}"}
+            = "${dateFormat.format(task.updated)} - ${task.status?.take(10)?.padEnd(10)} - ${BVColorUtils.red(task.title)} : ${task.httpUrl}"}

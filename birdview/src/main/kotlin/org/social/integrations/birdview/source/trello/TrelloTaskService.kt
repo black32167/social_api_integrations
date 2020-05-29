@@ -42,6 +42,9 @@ class TrelloTaskService(
                 listName = listName
         ))
 
+        val listsMap = trelloClientProvider.getTrelloClient(trelloConfig).loadLists(cards.map { it.idList  })
+                .associateBy { it.id }
+
         val tasks = cards.map { card ->
             val terms = tokenizer.tokenize(card.desc) + tokenizer.tokenize(card.name)
             BVDocument(
@@ -53,7 +56,9 @@ class TrelloTaskService(
                 httpUrl = card.url,
                 body = card.desc,
                 refsIds = BVFilters.filterIds(terms),
-                groupIds = extractGroupIds(card, trelloConfig.sourceName))
+                groupIds = extractGroupIds(card, trelloConfig.sourceName),
+                status = listsMap[card.idList]?.name
+            )
         }
         return tasks
     }

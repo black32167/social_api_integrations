@@ -45,7 +45,9 @@ class JiraTaskService(
                     httpUrl = "${config.baseUrl}/browse/${issue.key}",
                     body = description,
                     refsIds = BVFilters.filterIds(terms),
-                    groupIds = extractGroupIds(issue, config.sourceName))
+                    groupIds = extractGroupIds(issue, config.sourceName),
+                    status = issue.fields.status.name
+            )
         }
         return tasks
     }

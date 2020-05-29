@@ -12,4 +12,5 @@ class TrelloClientProvider(
 ) {
     fun getTrelloClient(trelloConfig: BVTrelloConfig) =
             TrelloClient(trelloConfig, taskListDefaults, usersConfigProvider)
+
 }

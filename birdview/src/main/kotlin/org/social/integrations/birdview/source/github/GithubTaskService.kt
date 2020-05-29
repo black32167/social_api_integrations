@@ -39,7 +39,9 @@ class GithubTaskService(
                 created = dateTimeFormat.parse(pr.created_at),
                 httpUrl = pr.pull_request?.html_url ?: "---",
                 refsIds = BVFilters.filterIds(terms),
-                groupIds = extractGroupIds(pr))
+                groupIds = extractGroupIds(pr),
+                status = pr.state
+            )
         }
         ?: listOf()
 

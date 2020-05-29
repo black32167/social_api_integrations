@@ -11,7 +11,8 @@ class TrelloCard (
         val name: String,
         val desc: String,
         val url: String,
-        val labels: Array<TrelloCardLabel>
+        val labels: Array<TrelloCardLabel>,
+        val idList: String
 )
 
 class TrelloCardLabel(

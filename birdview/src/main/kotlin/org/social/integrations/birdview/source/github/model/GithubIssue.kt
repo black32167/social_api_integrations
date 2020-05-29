@@ -6,7 +6,8 @@ class GithubIssue (
         var body: String?,
         var title: String,
         val updated_at : String,
-        val created_at : String
+        val created_at : String,
+        val state: String
 )
 
 class GithubPullRequestRef (

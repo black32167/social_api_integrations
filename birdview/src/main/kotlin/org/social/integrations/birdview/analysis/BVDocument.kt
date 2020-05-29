@@ -11,7 +11,8 @@ open class BVDocument (
         val created: Date,
         val httpUrl: String,
         val groupIds: List<DocumentGroupId>,
-        val refsIds: List<String>
+        val refsIds: List<String>,
+        val status: String? = null
 )
 
 data class DocumentGroupId(

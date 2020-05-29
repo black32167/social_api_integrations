@@ -6,6 +6,7 @@ import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.trello.model.TrelloBoard
 import org.social.integrations.birdview.source.trello.model.TrelloCard
 import org.social.integrations.birdview.source.trello.model.TrelloCardsSearchResponse
+import org.social.integrations.birdview.source.trello.model.TrelloList
 import org.social.integrations.tools.WebTargetFactory
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -43,7 +44,21 @@ class TrelloClient(private val trelloConfig: BVTrelloConfig,
             response.readEntity(TrelloBoard::class.java)
         }
 
-    fun getTarget() = WebTargetFactory(trelloConfig.baseUrl)
+    fun loadLists(listsIds: List<String>): List<TrelloList> = listsIds.map { listId ->
+        getTarget()
+                .path("lists")
+                .path(listId)
+                .request()
+                .get()
+        }
+        .map { response->
+            if(response.status != 200) {
+                throw RuntimeException("Error reading Trello list: ${response.readEntity(String::class.java)}")
+            }
+            response.readEntity(TrelloList::class.java)
+        }
+
+    private fun getTarget() = WebTargetFactory(trelloConfig.baseUrl)
             .getTarget("/1")
             .queryParam("key", trelloConfig.key)
             .queryParam("token", trelloConfig.token)

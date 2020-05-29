@@ -1,3 +1,2 @@
-- group by trello board
 - print issues/PRs status
 - filter by source type (i.e. github)

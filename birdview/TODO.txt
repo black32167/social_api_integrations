@@ -1,2 +1,2 @@
-- print issues/PRs status
+- link PRs to issues/cards
 - filter by source type (i.e. github)

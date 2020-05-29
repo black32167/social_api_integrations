@@ -43,17 +43,8 @@ class BVTaskService(
         val end = System.currentTimeMillis();
         //println("Request took ${end-start} ms.")
 
-        // TODO: collect all Ids
-        // TODO: create initial groups from Ids with tasks (grouping tasks by parent ids)
-
-
         // Sort tasks by update time
         tasks.sortBy { it.updated }
-
-
-//        for(task in tasks) {
-//            tfIdfCalclulator.addDoc(task)
-//        }
 
         for(task in tasks) {
             if(!(request.grouping && addToGroup(groups, task, request.groupingThreshold))) {
@@ -62,10 +53,24 @@ class BVTaskService(
         }
 
         groups.sortByDescending { it.getLastUpdated() }
-
+        mergeSingulars(groups)
         groupDescriber.describe(groups)
 
         return groups;
+    }
+
+
+    private fun mergeSingulars(groups: MutableList<BVDocumentCollection>) {
+        val it = groups.iterator()
+        val defaultGroup = BVDocumentCollection().apply { title = "--- Others ----" }
+        while (it.hasNext()) {
+            val g = it.next()
+            if(g.documents.size < 2) {
+                defaultGroup.documents.addAll(g.documents)
+                it.remove()
+            }
+        }
+        groups.add(defaultGroup)
     }
 
     private fun newGroup(task: BVDocument): BVDocumentCollection =
@@ -79,10 +84,10 @@ class BVTaskService(
         val maxTimeDistanceMs = 1000*60*60*24
         for(i in groups.size-1 downTo 0) {
             val group = groups[i]
-            val timeDistance = task.updated.time - group.getLastUpdated().time
-            if (timeDistance > maxTimeDistanceMs) {
-                break
-            }
+//            val timeDistance = task.updated.time - group.getLastUpdated().time
+//            if (timeDistance > maxTimeDistanceMs) {
+//                break
+//            }
             val proximity = calculateSimilarity(group, task)
             if(proximity > candidateProximity) {
                 candidateGroup = group

@@ -11,9 +11,11 @@ class GroupDescriber(
 ) {
     fun describe(groups: List<BVDocumentCollection>) {
         val groupDescriptions:Map<DocumentGroupId, String> = groupResolver.describe(groups.flatMap { it.groupIds })
-        groups.forEach {group ->
-            group.title = group.groupIds.firstOrNull()
-                    ?.let { docId -> groupDescriptions[docId] }
-        }
+        groups
+                .filter { it.title == null }
+                .forEach { group ->
+                    group.title = group.groupIds.firstOrNull()
+                            ?.let { docId -> groupDescriptions[docId] }
+                }
     }
 }

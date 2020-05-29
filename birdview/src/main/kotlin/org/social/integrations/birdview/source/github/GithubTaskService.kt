@@ -29,7 +29,6 @@ class GithubTaskService(
         ?.let { status -> githubClientProvider.getGithubClient(githubConfig).getRepositoriesPullRequests(status, request.since, request.user) }
         ?.map { pr: GithubIssue ->
             val description = pr.body ?: ""
-            val terms = tokenizer.tokenize(description) + tokenizer.tokenize(pr.title)
             BVDocument(
                 sourceName = githubConfig.sourceName,
                 id = pr.id,
@@ -38,7 +37,7 @@ class GithubTaskService(
                 updated = dateTimeFormat.parse(pr.updated_at),
                 created = dateTimeFormat.parse(pr.created_at),
                 httpUrl = pr.pull_request?.html_url ?: "---",
-                refsIds = BVFilters.filterIds(terms),
+                refsIds = BVFilters.filterIds("${description} ${pr.title}"),
                 groupIds = extractGroupIds(pr),
                 status = pr.state
             )

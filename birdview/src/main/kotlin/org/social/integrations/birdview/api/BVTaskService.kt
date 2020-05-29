@@ -53,14 +53,38 @@ class BVTaskService(
         }
 
         groups.sortByDescending { it.getLastUpdated() }
+        linkSingulars(groups)
         mergeSingulars(groups)
         groupDescriber.describe(groups)
 
         return groups;
     }
 
+    private fun linkSingulars(groups: MutableList<BVDocumentCollection>) {
+        val groupId2Group = groups
+                .flatMap { collection -> collection.groupIds.map { it to collection } }
+                .groupBy ({ entry -> entry.first.id }, { entry -> entry.second })
+        val ids2Collection = groups
+                .flatMap { collection -> collection.documents.map { it to collection } }
+                .groupBy ({ entry -> entry.first.id }, { entry -> entry.second })
+
+        groups
+                .filter { it.documents.size == 1 }
+                .flatMap { it.documents }
+                .forEach { doc:BVDocument ->
+                    doc.refsIds.forEach { refId ->
+                        groupId2Group[refId]?.forEach{
+                            collection -> collection.documents.add(doc)
+                        }
+                        ids2Collection[refId]?.forEach{
+                            collection -> collection.documents.add(doc)
+                        }
+                    }
+                }
+    }
 
     private fun mergeSingulars(groups: MutableList<BVDocumentCollection>) {
+        // Merge orphaned groups together
         val it = groups.iterator()
         val defaultGroup = BVDocumentCollection().apply { title = "--- Others ----" }
         while (it.hasNext()) {
@@ -70,6 +94,7 @@ class BVTaskService(
                 it.remove()
             }
         }
+
         groups.add(defaultGroup)
     }
 

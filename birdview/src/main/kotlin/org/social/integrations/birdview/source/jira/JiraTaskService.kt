@@ -35,7 +35,6 @@ class JiraTaskService(
 
         val tasks = jiraIssues.map { issue ->
             val description = issue.fields.description ?: ""
-            val terms = tokenizer.tokenize(description) + tokenizer.tokenize(issue.fields.summary)
             BVDocument(
                     sourceName = config.sourceName,
                     id = issue.key,
@@ -44,7 +43,7 @@ class JiraTaskService(
                     created = dateTimeFormat.parse(issue.fields.created),
                     httpUrl = "${config.baseUrl}/browse/${issue.key}",
                     body = description,
-                    refsIds = BVFilters.filterIds(terms),
+                    refsIds = BVFilters.filterIds("${description} ${issue.fields.summary}"),
                     groupIds = extractGroupIds(issue, config.sourceName),
                     status = issue.fields.status.name
             )

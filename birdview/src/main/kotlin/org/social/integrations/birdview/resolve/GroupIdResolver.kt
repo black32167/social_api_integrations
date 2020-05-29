@@ -7,7 +7,9 @@ import org.social.integrations.birdview.config.BVTrelloConfig
 import org.social.integrations.birdview.source.jira.JiraClientProvider
 import org.social.integrations.birdview.source.trello.TrelloClientProvider
 import org.social.integrations.birdview.source.trello.TrelloTaskService
+import javax.inject.Named
 
+@Named
 class GroupIdResolver(
         private val sourcesConfigProvider: BVSourcesConfigProvider,
         private val jiraClientProvider: JiraClientProvider,
@@ -15,11 +17,9 @@ class GroupIdResolver(
 
 ) {
     fun describe(docIds: Collection<DocumentGroupId>): Map<DocumentGroupId, String> = docIds
-                .groupBy { it.sourceName }.entries
-                .map { (source, ids) -> describeIds(source, ids) }
-                .fold(mutableMapOf<DocumentGroupId, String>()) {
-                    acc, map -> acc.putAll(map); return acc
-                }
+            .groupBy { it.sourceName }.entries
+            .map { (source, ids) -> describeIds(source, ids) }
+            .fold(mutableMapOf<DocumentGroupId, String>()) { acc, map -> acc.putAll(map); acc }
 
     private fun describeIds(sourceName: String, groupIds: List<DocumentGroupId>) =
             sourcesConfigProvider.getConfigByName(sourceName)?.let { sourceConfig ->
@@ -29,7 +29,6 @@ class GroupIdResolver(
                     else -> null
                 }
             } ?: mapOf()
-
 
     private fun describeJiraId(sourceConfig: BVJiraConfig, groupIds: List<DocumentGroupId>): Map<DocumentGroupId, String> {
         val issuesMap = jiraClientProvider
@@ -45,19 +44,17 @@ class GroupIdResolver(
                     .map { (type, docIds) ->
                         when(type) {
                             TrelloTaskService.TRELLO_BOARD_TYPE -> describeTrelloBoardId(docIds, sourceConfig)
-                            else -> mapOf()
+                            else -> mapOf<DocumentGroupId, String>()
                         }
                     }
-                    .flatMap { it.entries }
-                    .map { (k, v) -> k to v }
-                    .toMap()
+                    .fold(mutableMapOf<DocumentGroupId, String>()) { acc, map -> acc.putAll(map); acc }
 
     private fun describeTrelloBoardId(boardIds: List<DocumentGroupId>, sourceConfig: BVTrelloConfig): Map<DocumentGroupId, String> {
         val boardsMap = trelloClientProvider
                 .getTrelloClient(sourceConfig)
                 .getBoards(boardIds.map { it.id })
                 .associateBy { board->board.id }
-        return boardIds.associateWith { boardsMap.get(it.id)?.desc ?: "???" }
+        return boardIds.associateWith { boardsMap.get(it.id)?.name ?: "???" }
     }
 
 }

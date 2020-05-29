@@ -63,8 +63,6 @@ class TrelloTaskService(
                     card.labels.map { DocumentGroupId(it.id, TRELLO_LABEL_TYPE, sourceName) }
 
 
-
-
     private fun getList(status: String): String? = when (status) {
         "done" -> "Done"
         "progress" -> "Progress"

@@ -39,6 +39,7 @@ class TrelloClient(private val trelloConfig: BVTrelloConfig,
             if(response.status != 200) {
                 throw RuntimeException("Error reading Trello board: ${response.readEntity(String::class.java)}")
             }
+//            println(response.readEntity(String::class.java))
             response.readEntity(TrelloBoard::class.java)
         }
 

@@ -1,2 +1,2 @@
-- link PRs to issues/cards
+- link/group PRs to their issues/cards
 - filter by source type (i.e. github)

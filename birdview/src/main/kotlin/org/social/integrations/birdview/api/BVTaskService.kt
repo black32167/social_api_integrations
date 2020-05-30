@@ -65,8 +65,9 @@ class BVTaskService(
                 .flatMap { collection -> collection.groupIds.map { it to collection } }
                 .groupBy ({ entry -> entry.first.id }, { entry -> entry.second })
         val ids2Collection = groups
-                .flatMap { collection -> collection.documents.map { it to collection } }
-                .groupBy ({ entry -> entry.first.id }, { entry -> entry.second })
+                .flatMap { collection -> collection.documents.map { doc -> doc to collection } }
+                .flatMap { entry -> entry.first.ids.map { docId -> docId to entry.second } }
+                .groupBy ({ entry -> entry.first }, { entry -> entry.second })
 
         val collectionsIterator = groups.iterator()
         while (collectionsIterator.hasNext()) {

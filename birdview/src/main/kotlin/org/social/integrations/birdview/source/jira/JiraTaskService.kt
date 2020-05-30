@@ -37,7 +37,7 @@ class JiraTaskService(
             val description = issue.fields.description ?: ""
             BVDocument(
                     sourceName = config.sourceName,
-                    id = issue.key,
+                    ids = listOf(issue.key),
                     title = issue.fields.summary,
                     updated = dateTimeFormat.parse(issue.fields.updated),
                     created = dateTimeFormat.parse(issue.fields.created),

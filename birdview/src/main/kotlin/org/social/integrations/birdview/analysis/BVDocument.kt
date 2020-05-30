@@ -4,7 +4,7 @@ import java.util.*
 
 open class BVDocument (
         val sourceName: String,
-        val id: String,
+        val ids: List<String>,
         val title: String,
         val body: String,
         val updated: Date,

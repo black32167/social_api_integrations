@@ -36,7 +36,7 @@ class GithubTaskService(
             val description = pr.body ?: ""
             BVDocument(
                 sourceName = githubConfig.sourceName,
-                id = pr.id,
+                ids = listOf(pr.id),
                 title = pr.title,
                 body = description,
                 updated = dateTimeFormat.parse(pr.updated_at),

@@ -49,7 +49,7 @@ class TrelloTaskService(
             val terms = tokenizer.tokenize(card.desc) + tokenizer.tokenize(card.name)
             BVDocument(
                 sourceName = trelloConfig.sourceName,
-                id = card.id,
+                ids = extractIds(card),
                 title = card.name,
                 updated = parseDate(card.dateLastActivity),
                 created = parseDate(card.dateLastActivity),
@@ -62,6 +62,9 @@ class TrelloTaskService(
         }
         return tasks
     }
+
+    private fun extractIds(card: TrelloCard): List<String> =
+            listOf(card.id, card.shortLink)
 
     private fun extractGroupIds(card: TrelloCard, sourceName: String): List<DocumentGroupId> =
             listOf(DocumentGroupId(card.idBoard, TRELLO_BOARD_TYPE, sourceName)) +

@@ -1,22 +1,25 @@
 package org.social.integrations.birdview.source.github
 
 import org.social.integrations.birdview.analysis.BVDocument
-import org.social.integrations.birdview.analysis.DocumentGroupId
-import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.config.BVGithubConfig
 import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.github.model.GithubIssue
+import org.social.integrations.birdview.source.github.model.GithubPullRequest
+import org.social.integrations.birdview.utils.BVConcurrentUtils
 import org.social.integrations.birdview.utils.BVFilters
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import javax.inject.Named
 
 @Named
 class GithubTaskService(
         val sourcesConfigProvider: BVSourcesConfigProvider,
-        val githubClientProvider: GithubClientProvider,
-        val tokenizer: TextTokenizer
+        val githubClientProvider: GithubClientProvider
 ): BVTaskSource {
+    private val executor = Executors.newFixedThreadPool(10, BVConcurrentUtils.getDaemonThreadFactory())
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
     // TODO: parallelize
@@ -27,7 +30,9 @@ class GithubTaskService(
     private fun getTasks(request: TasksRequest, githubConfig:BVGithubConfig): List<BVDocument> =
         getIssueState(request.status)
         ?.let { status -> githubClientProvider.getGithubClient(githubConfig).getRepositoriesPullRequests(status, request.since, request.user) }
-        ?.map { pr: GithubIssue ->
+        ?.map { issue: GithubIssue -> executor.submit (Callable<GithubPullRequest> { getPr(issue, githubConfig) } ) }
+        ?.map ( Future<GithubPullRequest>::get )
+        ?.map { pr: GithubPullRequest ->
             val description = pr.body ?: ""
             BVDocument(
                 sourceName = githubConfig.sourceName,
@@ -36,19 +41,18 @@ class GithubTaskService(
                 body = description,
                 updated = dateTimeFormat.parse(pr.updated_at),
                 created = dateTimeFormat.parse(pr.created_at),
-                httpUrl = pr.pull_request?.html_url ?: "---",
-                refsIds = BVFilters.filterIds("${description} ${pr.title}"),
-                groupIds = extractGroupIds(pr),
+                httpUrl = pr.html_url,
+                refsIds = BVFilters.filterIdsFromText("${description} ${pr.title}") +
+                    BVFilters.filterIdsFromText(pr.head.ref),
+                groupIds = listOf(),
                 status = pr.state
             )
         }
         ?: listOf()
 
-    private fun extractGroupIds(issue: GithubIssue): List<DocumentGroupId> = listOf()
-
-    private fun extractTerms(pr: GithubIssue): List<String> {
-        return tokenizer.tokenize(pr.title) + tokenizer.tokenize(pr.body?:"")
-    }
+    private fun getPr(issue: GithubIssue, githubConfig:BVGithubConfig): GithubPullRequest? =
+            issue.pull_request?.url
+                    ?.let { url -> githubClientProvider.getGithubClient(githubConfig).getPullRequest(url) }
 
     private fun getIssueState(status: String):String? =
         when(status) {

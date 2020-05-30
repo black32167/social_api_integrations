@@ -55,7 +55,7 @@ class TrelloTaskService(
                 created = parseDate(card.dateLastActivity),
                 httpUrl = card.url,
                 body = card.desc,
-                refsIds = BVFilters.filterIds("${card.desc} ${card.name}"),
+                refsIds = BVFilters.filterIdsFromText("${card.desc} ${card.name}"),
                 groupIds = extractGroupIds(card, trelloConfig.sourceName),
                 status = listsMap[card.idList]?.name
             )

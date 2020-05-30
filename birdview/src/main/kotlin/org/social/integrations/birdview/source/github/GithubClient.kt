@@ -4,7 +4,7 @@ import org.social.integrations.birdview.config.BVGithubConfig
 import org.social.integrations.birdview.config.BVUsersConfigProvider
 import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.github.model.GithubIssue
-import org.social.integrations.birdview.source.github.model.GithubPRResponse
+import org.social.integrations.birdview.source.github.model.GithubPullRequest
 import org.social.integrations.birdview.source.github.model.GithubSearchIssuesResponse
 import org.social.integrations.birdview.utils.BVConcurrentUtils
 import org.social.integrations.tools.WebTargetFactory
@@ -93,21 +93,21 @@ class GithubClient(
                     ?.readEntity(String::class.java)
                     ?:""
 
-    fun getCurrentUserPullRequests(issueState: String, since: ZonedDateTime):List<GithubPRResponse> =
+    fun getCurrentUserPullRequests(issueState: String, since: ZonedDateTime):List<GithubPullRequest> =
             getCurrentUserIssues(issueState, since)
                     .mapNotNull { issue -> // Get Pull Requests
                         issue.pull_request?.url
-                                ?.let { pr_url -> executor.submit(Callable<GithubPRResponse> { getPullRequest(pr_url) }) }
+                                ?.let { pr_url -> executor.submit(Callable<GithubPullRequest> { getPullRequest(pr_url) }) }
                     }
                     .map { it.get() }
 
     private fun getConfig(): BVGithubConfig?  = githubConfig
 
-    fun getPullRequest(prUrl: String): GithubPRResponse? =
+    fun getPullRequest(prUrl: String): GithubPullRequest? =
             getTarget(prUrl)
                     ?.request()
                     ?.get()
-                    ?.readEntity(GithubPRResponse::class.java)
+                    ?.readEntity(GithubPullRequest::class.java)
 
     private fun getTarget() = getConfig()
         ?.let { config-> getTarget(config.baseUrl) }

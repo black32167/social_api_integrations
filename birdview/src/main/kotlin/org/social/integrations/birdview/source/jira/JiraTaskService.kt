@@ -43,7 +43,7 @@ class JiraTaskService(
                     created = dateTimeFormat.parse(issue.fields.created),
                     httpUrl = "${config.baseUrl}/browse/${issue.key}",
                     body = description,
-                    refsIds = BVFilters.filterIds("${description} ${issue.fields.summary}"),
+                    refsIds = BVFilters.filterIdsFromText("${description} ${issue.fields.summary}"),
                     groupIds = extractGroupIds(issue, config.sourceName),
                     status = issue.fields.status.name
             )

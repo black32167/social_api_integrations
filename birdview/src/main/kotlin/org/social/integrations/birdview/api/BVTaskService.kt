@@ -68,19 +68,25 @@ class BVTaskService(
                 .flatMap { collection -> collection.documents.map { it to collection } }
                 .groupBy ({ entry -> entry.first.id }, { entry -> entry.second })
 
-        groups
-                .filter { it.documents.size == 1 }
-                .flatMap { it.documents }
-                .forEach { doc:BVDocument ->
-                    doc.refsIds.forEach { refId ->
-                        groupId2Group[refId]?.forEach{
-                            collection -> collection.documents.add(doc)
-                        }
-                        ids2Collection[refId]?.forEach{
-                            collection -> collection.documents.add(doc)
+        val collectionsIterator = groups.iterator()
+        while (collectionsIterator.hasNext()) {
+            collectionsIterator.next()
+                    .takeIf { it.documents.size == 1 }
+                    ?.documents
+                    ?.forEach { doc:BVDocument ->
+                        val targetCollections:List<BVDocumentCollection> = doc.refsIds
+                                .flatMap { refId ->
+                                    (groupId2Group[refId] ?: emptyList<BVDocumentCollection>()) +
+                                            (ids2Collection[refId] ?: emptyList<BVDocumentCollection>())
+                                }
+                        if (!targetCollections.isEmpty()) {
+                            targetCollections.forEach{
+                                collection -> collection.documents.add(doc)
+                            }
+                            collectionsIterator.remove()
                         }
                     }
-                }
+        }
     }
 
     private fun mergeSingulars(groups: MutableList<BVDocumentCollection>) {

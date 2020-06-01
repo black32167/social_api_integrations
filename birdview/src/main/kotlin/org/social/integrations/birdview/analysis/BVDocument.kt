@@ -3,19 +3,30 @@ package org.social.integrations.birdview.analysis
 import java.util.*
 
 open class BVDocument (
-        val sourceName: String,
-        val ids: List<String>,
-        val title: String,
-        val body: String,
-        val updated: Date,
-        val created: Date,
-        val httpUrl: String,
-        val groupIds: List<DocumentGroupId>,
-        val refsIds: List<String>,
+        val ids: List<BVDocumentId>,
+        var title: String? = null,
+        val body: String = "",
+        val updated: Date? = null,
+        val created: Date? = null,
+        val httpUrl: String? = null,
+        val subDocuments: MutableList<BVDocument> = mutableListOf(),
+        val groupIds: List<BVDocumentId> = emptyList(),
+        val refsIds: List<String> = emptyList(),
         val status: String? = null
-)
+) {
+    val inferredIds: MutableSet<BVDocumentId> = mutableSetOf<BVDocumentId>()
+            .apply { addAll(ids) }
 
-data class DocumentGroupId(
+    fun addDocument(task:BVDocument) {
+        subDocuments.add(task)
+        inferredIds.addAll(task.groupIds)
+    }
+
+    fun getLastUpdated(): Date? =
+            subDocuments.mapNotNull { it.updated }.min()
+}
+
+data class BVDocumentId(
         val id:String,
         val type:String,
         val sourceName:String)

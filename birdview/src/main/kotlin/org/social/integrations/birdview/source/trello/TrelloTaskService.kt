@@ -1,12 +1,11 @@
 package org.social.integrations.birdview.source.trello
 
 import org.social.integrations.birdview.analysis.BVDocument
-import org.social.integrations.birdview.analysis.DocumentGroupId
+import org.social.integrations.birdview.analysis.BVDocumentId
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.config.BVTrelloConfig
 import org.social.integrations.birdview.request.TasksRequest
-import org.social.integrations.birdview.source.BVTaskListsDefaults
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.trello.model.TrelloCard
 import org.social.integrations.birdview.utils.BVFilters
@@ -17,10 +16,11 @@ import javax.inject.Named
 class TrelloTaskService(
         val sourcesConfigProvider: BVSourcesConfigProvider,
         val tokenizer: TextTokenizer,
-        val sourceConfig: BVTaskListsDefaults,
         private val trelloClientProvider: TrelloClientProvider
 ) : BVTaskSource {
     companion object {
+        val TRELLO_CARD_ID_TYPE = "trelloCardId"
+        val TRELLO_CARD_SHORTLINK_TYPE = "trelloCardShortLink"
         val TRELLO_BOARD_TYPE = "trelloBoardId"
         val TRELLO_LABEL_TYPE = "trelloLabel"
     }
@@ -48,8 +48,7 @@ class TrelloTaskService(
         val tasks = cards.map { card ->
             val terms = tokenizer.tokenize(card.desc) + tokenizer.tokenize(card.name)
             BVDocument(
-                sourceName = trelloConfig.sourceName,
-                ids = extractIds(card),
+                ids = extractIds(card, trelloConfig.sourceName),
                 title = card.name,
                 updated = parseDate(card.dateLastActivity),
                 created = parseDate(card.dateLastActivity),
@@ -63,12 +62,14 @@ class TrelloTaskService(
         return tasks
     }
 
-    private fun extractIds(card: TrelloCard): List<String> =
-            listOf(card.id, card.shortLink)
+    private fun extractIds(card: TrelloCard, sourceName: String): List<BVDocumentId> =
+            listOf(
+                    BVDocumentId( id = card.id, type = TRELLO_CARD_ID_TYPE, sourceName = sourceName),
+                    BVDocumentId( id = card.shortLink, type = TRELLO_CARD_SHORTLINK_TYPE, sourceName = sourceName))
 
-    private fun extractGroupIds(card: TrelloCard, sourceName: String): List<DocumentGroupId> =
-            listOf(DocumentGroupId(card.idBoard, TRELLO_BOARD_TYPE, sourceName)) +
-                    card.labels.map { DocumentGroupId(it.id, TRELLO_LABEL_TYPE, sourceName) }
+    private fun extractGroupIds(card: TrelloCard, sourceName: String): List<BVDocumentId> =
+            listOf(BVDocumentId(card.idBoard, TRELLO_BOARD_TYPE, sourceName)) +
+                    card.labels.map { BVDocumentId(it.id, TRELLO_LABEL_TYPE, sourceName) }
 
 
     private fun getList(status: String): String? = when (status) {

@@ -1,6 +1,7 @@
 package org.social.integrations.birdview.source.github
 
 import org.social.integrations.birdview.analysis.BVDocument
+import org.social.integrations.birdview.analysis.BVDocumentId
 import org.social.integrations.birdview.config.BVGithubConfig
 import org.social.integrations.birdview.config.BVSourcesConfigProvider
 import org.social.integrations.birdview.request.TasksRequest
@@ -19,6 +20,9 @@ class GithubTaskService(
         val sourcesConfigProvider: BVSourcesConfigProvider,
         val githubClientProvider: GithubClientProvider
 ): BVTaskSource {
+    companion object {
+        val GITHUB_ID = "githubId"
+    }
     private val executor = Executors.newFixedThreadPool(10, BVConcurrentUtils.getDaemonThreadFactory())
     private val dateTimeFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
@@ -35,8 +39,7 @@ class GithubTaskService(
         ?.map { pr: GithubPullRequest ->
             val description = pr.body ?: ""
             BVDocument(
-                sourceName = githubConfig.sourceName,
-                ids = listOf(pr.id),
+                ids = listOf(BVDocumentId( id = pr.id, type = GITHUB_ID, sourceName = githubConfig.sourceName)),
                 title = pr.title,
                 body = description,
                 updated = dateTimeFormat.parse(pr.updated_at),

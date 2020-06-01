@@ -1,7 +1,7 @@
 package org.social.integrations.birdview
 
-import org.social.integrations.birdview.analysis.DocumentGroupId
-import org.social.integrations.birdview.model.BVDocumentCollection
+import org.social.integrations.birdview.analysis.BVDocument
+import org.social.integrations.birdview.analysis.BVDocumentId
 import org.social.integrations.birdview.resolve.GroupIdResolver
 import javax.inject.Named
 
@@ -9,12 +9,12 @@ import javax.inject.Named
 class GroupDescriber(
         private val groupResolver: GroupIdResolver
 ) {
-    fun describe(groups: List<BVDocumentCollection>) {
-        val groupDescriptions:Map<DocumentGroupId, String> = groupResolver.describe(groups.flatMap { it.groupIds })
+    fun describe(groups: List<BVDocument>) {
+        val groupDescriptions:Map<BVDocumentId, String> = groupResolver.describe(groups.flatMap { it.ids })
         groups
                 .filter { it.title == null }
                 .forEach { group ->
-                    group.title = group.groupIds.firstOrNull()
+                    group.title = group.ids.firstOrNull()
                             ?.let { docId -> groupDescriptions[docId] }
                 }
     }

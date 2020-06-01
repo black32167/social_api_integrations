@@ -2,7 +2,7 @@ package org.social.integrations.birdview.api
 
 import org.social.integrations.birdview.GroupDescriber
 import org.social.integrations.birdview.analysis.BVDocument
-import org.social.integrations.birdview.model.BVDocumentCollection
+import org.social.integrations.birdview.analysis.BVDocumentId
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
 import org.social.integrations.birdview.source.github.GithubTaskService
@@ -23,9 +23,9 @@ class BVTaskService(
     private val executor = Executors.newFixedThreadPool(3, BVConcurrentUtils.getDaemonThreadFactory())
    // private val tfIdfCalclulator = TfIdfCalclulator()
 
-    fun getTaskGroups(request: TasksRequest): List<BVDocumentCollection> {
-        val groups = mutableListOf<BVDocumentCollection>()
-        val tasks = mutableListOf<BVDocument>()
+    fun getTaskGroups(request: TasksRequest): List<BVDocument> {
+        val groupingIdsMap = mutableMapOf<BVDocumentId, List<BVDocument>>()
+        val docs = mutableListOf<BVDocument>()
         val start = System.currentTimeMillis()
         val sources = listOf<BVTaskSource>(jira, trello, github)
 
@@ -34,111 +34,51 @@ class BVTaskService(
         }
         for (future in futures) {
             try {
-                tasks.addAll(future.get())
+                docs.addAll(future.get())
             } catch (e:Exception) {
                 e.printStackTrace()
             }
         }
 
-        val end = System.currentTimeMillis();
-        //println("Request took ${end-start} ms.")
+        linkDocs(docs)
 
-        // Sort tasks by update time
-        tasks.sortBy { it.updated }
-
-        for(task in tasks) {
-            if(!(request.grouping && addToGroup(groups, task, request.groupingThreshold))) {
-                groups.add(newGroup(task))
+        // Collect all groupIds
+        val groupedDocumentsMap = docs.fold(mutableMapOf<BVDocumentId, MutableList<BVDocument>>()) { acc, doc ->
+            doc.groupIds.forEach { groupId ->
+                acc.computeIfAbsent(groupId) { mutableListOf() }.add(doc)
             }
+            acc
         }
 
-        groups.sortByDescending { it.getLastUpdated() }
-        linkSingulars(groups)
-        mergeSingulars(groups)
-        groupDescriber.describe(groups)
+        val groupedDocuments:List<BVDocument> = groupedDocumentsMap
+                .map { (groupDocId, collection) -> newGroupDoc(groupDocId, collection) }
+                .sortedByDescending { it.getLastUpdated() }
 
-        return groups;
+        groupDescriber.describe(groupedDocuments)
+
+        return groupedDocuments
     }
 
-    private fun linkSingulars(groups: MutableList<BVDocumentCollection>) {
-        val groupId2Group = groups
-                .flatMap { collection -> collection.groupIds.map { it to collection } }
-                .groupBy ({ entry -> entry.first.id }, { entry -> entry.second })
-        val ids2Collection = groups
-                .flatMap { collection -> collection.documents.map { doc -> doc to collection } }
-                .flatMap { entry -> entry.first.ids.map { docId -> docId to entry.second } }
-                .groupBy ({ entry -> entry.first }, { entry -> entry.second })
+    private fun newGroupDoc(groupDocId: BVDocumentId, collection: List<BVDocument>):BVDocument =
+            BVDocument(ids = listOf(groupDocId), subDocuments = collection.toMutableList())
 
-        val collectionsIterator = groups.iterator()
+    private fun linkDocs(docs: MutableList<BVDocument>) {
+        val groupId2Group = docs
+                .flatMap { collection -> collection.ids.map { it to collection } }
+                .groupBy ({ entry -> entry.first.id }, { entry -> entry.second })
+
+        val collectionsIterator = docs.iterator()
         while (collectionsIterator.hasNext()) {
             collectionsIterator.next()
-                    .takeIf { it.documents.size == 1 }
-                    ?.documents
-                    ?.forEach { doc:BVDocument ->
-                        val targetCollections:List<BVDocumentCollection> = doc.refsIds
-                                .flatMap { refId ->
-                                    (groupId2Group[refId] ?: emptyList<BVDocumentCollection>()) +
-                                            (ids2Collection[refId] ?: emptyList<BVDocumentCollection>())
-                                }
-                        if (!targetCollections.isEmpty()) {
-                            targetCollections.forEach{
-                                collection -> collection.documents.add(doc)
-                            }
+                    .also { doc:BVDocument ->
+                        val targetDocs:List<BVDocument> = doc.refsIds
+                                .flatMap { refId -> (groupId2Group[refId] ?: emptyList<BVDocument>()) }
+                        if (!targetDocs.isEmpty()) {
+                            targetDocs.forEach{ it.subDocuments.add(doc) }
                             collectionsIterator.remove()
                         }
                     }
         }
     }
 
-    private fun mergeSingulars(groups: MutableList<BVDocumentCollection>) {
-        // Merge orphaned groups together
-        val it = groups.iterator()
-        val defaultGroup = BVDocumentCollection().apply { title = "--- Others ----" }
-        while (it.hasNext()) {
-            val g = it.next()
-            if(g.documents.size < 2) {
-                defaultGroup.documents.addAll(g.documents)
-                it.remove()
-            }
-        }
-
-        groups.add(defaultGroup)
-    }
-
-    private fun newGroup(task: BVDocument): BVDocumentCollection =
-        BVDocumentCollection().also {it.addDocument(task) }
-
-    // NOTE: side-effect: sorts groups
-    private fun addToGroup(groups: MutableList<BVDocumentCollection>, task: BVDocument, proximityMergingThreshold: Double): Boolean {
-        var candidateGroup:BVDocumentCollection? = null
-        var candidateProximity = 0.0
-
-        val maxTimeDistanceMs = 1000*60*60*24
-        for(i in groups.size-1 downTo 0) {
-            val group = groups[i]
-//            val timeDistance = task.updated.time - group.getLastUpdated().time
-//            if (timeDistance > maxTimeDistanceMs) {
-//                break
-//            }
-            val proximity = calculateSimilarity(group, task)
-            if(proximity > candidateProximity) {
-                candidateGroup = group
-                candidateProximity = proximity
-            }
-        }
-
-        if(candidateGroup != null && candidateProximity > proximityMergingThreshold) {
-            candidateGroup.addDocument(task)
-
-            //Resort groups
-            groups.sortBy { it.getLastUpdated() }
-
-            return true
-        }
-
-        return false
-    }
-
-    private fun calculateSimilarity(group: BVDocumentCollection, task: BVDocument): Double =
-        if (task.groupIds.any { group.groupIds.contains(it) }) 1.0 else 0.0
 }

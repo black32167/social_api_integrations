@@ -3,7 +3,6 @@ package org.social.integrations.birdview.command
 import org.social.integrations.birdview.GroupDescriber
 import org.social.integrations.birdview.analysis.BVDocument
 import org.social.integrations.birdview.api.BVTaskService
-import org.social.integrations.birdview.model.BVDocumentCollection
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.utils.BVColorUtils
 import org.social.integrations.birdview.utils.BVColorUtils.bold
@@ -69,17 +68,17 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
         return 0
     }
 
-    fun printTaskGroups(tasksGroup:List<BVDocumentCollection>) {
+    fun printTaskGroups(tasksGroup:List<BVDocument>) {
         tasksGroup.forEach { group->
             if(noItems) {
                 println("[${group.title}]")
-            } else if (group.documents.size > 1) {
+            } else if (group.subDocuments.size > 1) {
                 println("[${group.title}]")
-                group.documents.forEach { task ->
+                group.subDocuments.forEach { task ->
                     println("    ${describe(task)}")
                 }
             } else {
-                group.documents.first().also { task->
+                group.subDocuments.first().also { task->
                     println(describe(task))
                 }
             }
@@ -87,4 +86,7 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
     }
 
     fun describe(task: BVDocument)
-            = "${dateFormat.format(task.updated)} - ${task.status?.take(10)?.padEnd(10)} - ${BVColorUtils.red(task.title)} : ${task.httpUrl}"}
+            = "${dateFormat.format(task.updated)} - " +
+            "${task.status?.take(10)?.padEnd(10)} - " +
+            "${BVColorUtils.red(task.title ?: "???")} : " +
+            "${task.httpUrl}"}

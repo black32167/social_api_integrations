@@ -1,7 +1,7 @@
 package org.social.integrations.birdview.source.jira
 
 import org.social.integrations.birdview.analysis.BVDocument
-import org.social.integrations.birdview.analysis.DocumentGroupId
+import org.social.integrations.birdview.analysis.BVDocumentId
 import org.social.integrations.birdview.analysis.tokenize.TextTokenizer
 import org.social.integrations.birdview.config.BVJiraConfig
 import org.social.integrations.birdview.config.BVSourcesConfigProvider
@@ -36,8 +36,7 @@ class JiraTaskService(
         val tasks = jiraIssues.map { issue ->
             val description = issue.fields.description ?: ""
             BVDocument(
-                    sourceName = config.sourceName,
-                    ids = listOf(issue.key),
+                    ids = listOf(BVDocumentId( id = issue.key, type = JIRA_KEY_TYPE, sourceName = config.sourceName)),
                     title = issue.fields.summary,
                     updated = dateTimeFormat.parse(issue.fields.updated),
                     created = dateTimeFormat.parse(issue.fields.created),
@@ -51,9 +50,9 @@ class JiraTaskService(
         return tasks
     }
 
-    private fun extractGroupIds(issue: JiraIssue, sourceName: String): List<DocumentGroupId> =
-            (issue.fields.customfield_10007?.let { listOf(DocumentGroupId(it, JIRA_KEY_TYPE, sourceName)) } ?: listOf<DocumentGroupId>()) +
-                    (issue.fields.parent?.let{ listOf(DocumentGroupId(it.key, JIRA_KEY_TYPE, sourceName)) } ?: listOf<DocumentGroupId>())
+    private fun extractGroupIds(issue: JiraIssue, sourceName: String): List<BVDocumentId> =
+            (issue.fields.customfield_10007?.let { listOf(BVDocumentId(it, JIRA_KEY_TYPE, sourceName)) } ?: listOf<BVDocumentId>()) +
+                    (issue.fields.parent?.let{ listOf(BVDocumentId(it.key, JIRA_KEY_TYPE, sourceName)) } ?: listOf<BVDocumentId>())
 
     private fun getIssueStatus(status: String): String? = when (status) {
         "done" -> "Done"

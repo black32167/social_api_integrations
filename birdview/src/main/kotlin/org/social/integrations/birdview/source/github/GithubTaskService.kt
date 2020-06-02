@@ -39,7 +39,7 @@ class GithubTaskService(
         ?.map { pr: GithubPullRequest ->
             val description = pr.body ?: ""
             BVDocument(
-                ids = listOf(BVDocumentId( id = pr.id, type = GITHUB_ID, sourceName = githubConfig.sourceName)),
+                ids = setOf(BVDocumentId( id = pr.id, type = GITHUB_ID, sourceName = githubConfig.sourceName)),
                 title = pr.title,
                 body = description,
                 updated = dateTimeFormat.parse(pr.updated_at),
@@ -47,7 +47,7 @@ class GithubTaskService(
                 httpUrl = pr.html_url,
                 refsIds = BVFilters.filterIdsFromText("${description} ${pr.title}") +
                     BVFilters.filterIdsFromText(pr.head.ref),
-                groupIds = listOf(),
+                groupIds = setOf(),
                 status = pr.state
             )
         }

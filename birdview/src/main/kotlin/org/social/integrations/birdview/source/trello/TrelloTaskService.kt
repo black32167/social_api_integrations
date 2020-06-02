@@ -46,7 +46,6 @@ class TrelloTaskService(
                 .associateBy { it.id }
 
         val tasks = cards.map { card ->
-            val terms = tokenizer.tokenize(card.desc) + tokenizer.tokenize(card.name)
             BVDocument(
                 ids = extractIds(card, trelloConfig.sourceName),
                 title = card.name,
@@ -62,13 +61,13 @@ class TrelloTaskService(
         return tasks
     }
 
-    private fun extractIds(card: TrelloCard, sourceName: String): List<BVDocumentId> =
-            listOf(
+    private fun extractIds(card: TrelloCard, sourceName: String): Set<BVDocumentId> =
+            setOf(
                     BVDocumentId( id = card.id, type = TRELLO_CARD_ID_TYPE, sourceName = sourceName),
                     BVDocumentId( id = card.shortLink, type = TRELLO_CARD_SHORTLINK_TYPE, sourceName = sourceName))
 
-    private fun extractGroupIds(card: TrelloCard, sourceName: String): List<BVDocumentId> =
-            listOf(BVDocumentId(card.idBoard, TRELLO_BOARD_TYPE, sourceName)) +
+    private fun extractGroupIds(card: TrelloCard, sourceName: String): Set<BVDocumentId> =
+            setOf(BVDocumentId(card.idBoard, TRELLO_BOARD_TYPE, sourceName)) +
                     card.labels.map { BVDocumentId(it.id, TRELLO_LABEL_TYPE, sourceName) }
 
 

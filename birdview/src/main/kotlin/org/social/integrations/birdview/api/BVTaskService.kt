@@ -73,7 +73,7 @@ class BVTaskService(
 
     private fun newGroupDoc(groupDocId: BVDocumentId?, collection: List<BVDocument>):BVDocument =
             BVDocument(
-                    ids = groupDocId?.let { listOf(it) } ?: emptyList(),
+                    ids = groupDocId?.let { setOf(it) } ?: emptySet(),
                     subDocuments = collection.toMutableList())
 
     private fun linkDocs(docs: MutableList<BVDocument>) {

@@ -3,14 +3,14 @@ package org.social.integrations.birdview.analysis
 import java.util.*
 
 open class BVDocument (
-        val ids: List<BVDocumentId>,
+        val ids: Set<BVDocumentId>,
         var title: String? = null,
         val body: String = "",
         val updated: Date? = null,
         val created: Date? = null,
         val httpUrl: String? = null,
         val subDocuments: MutableList<BVDocument> = mutableListOf(),
-        val groupIds: List<BVDocumentId> = emptyList(),
+        val groupIds: Set<BVDocumentId> = emptySet(),
         val refsIds: List<String> = emptyList(),
         val status: String? = null
 ) {

@@ -36,7 +36,7 @@ class JiraTaskService(
         val tasks = jiraIssues.map { issue ->
             val description = issue.fields.description ?: ""
             BVDocument(
-                    ids = listOf(BVDocumentId( id = issue.key, type = JIRA_KEY_TYPE, sourceName = config.sourceName)),
+                    ids = setOf(BVDocumentId( id = issue.key, type = JIRA_KEY_TYPE, sourceName = config.sourceName)),
                     title = issue.fields.summary,
                     updated = dateTimeFormat.parse(issue.fields.updated),
                     created = dateTimeFormat.parse(issue.fields.created),
@@ -50,9 +50,9 @@ class JiraTaskService(
         return tasks
     }
 
-    private fun extractGroupIds(issue: JiraIssue, sourceName: String): List<BVDocumentId> =
-            (issue.fields.customfield_10007?.let { listOf(BVDocumentId(it, JIRA_KEY_TYPE, sourceName)) } ?: listOf<BVDocumentId>()) +
-                    (issue.fields.parent?.let{ listOf(BVDocumentId(it.key, JIRA_KEY_TYPE, sourceName)) } ?: listOf<BVDocumentId>())
+    private fun extractGroupIds(issue: JiraIssue, sourceName: String): Set<BVDocumentId> =
+            (issue.fields.customfield_10007?.let { setOf(BVDocumentId(it, JIRA_KEY_TYPE, sourceName)) } ?: emptySet<BVDocumentId>()) +
+                    (issue.fields.parent?.let{ setOf(BVDocumentId(it.key, JIRA_KEY_TYPE, sourceName)) } ?: emptySet<BVDocumentId>())
 
     private fun getIssueStatus(status: String): String? = when (status) {
         "done" -> "Done"

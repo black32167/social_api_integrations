@@ -11,7 +11,7 @@ open class BVDocument (
         val httpUrl: String? = null,
         val subDocuments: MutableList<BVDocument> = mutableListOf(),
         val groupIds: Set<BVDocumentId> = emptySet(),
-        val refsIds: List<String> = emptyList(),
+        val refsIds: Set<String> = emptySet(),
         val status: String? = null
 ) {
     val inferredIds: MutableSet<BVDocumentId> = mutableSetOf<BVDocumentId>()

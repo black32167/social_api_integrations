@@ -76,6 +76,9 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
                 println("[${group.title}]")
                 group.subDocuments.forEach { task ->
                     println("    ${describe(task)}")
+                    task.subDocuments.forEach { subDoc ->
+                        println("      |-> ${describe(subDoc)}")
+                    }
                 }
             } else {
                 group.subDocuments.first().also { task->

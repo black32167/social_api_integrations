@@ -33,7 +33,7 @@ class GithubTaskService(
 
     private fun getTasks(request: TasksRequest, githubConfig:BVGithubConfig): List<BVDocument> =
         getIssueState(request.status)
-        ?.let { status -> githubClientProvider.getGithubClient(githubConfig).getRepositoriesPullRequests(status, request.since, request.user) }
+        ?.let { status -> githubClientProvider.getGithubClient(githubConfig).getPullRequestIssues(status, request.since, request.user) }
         ?.map { issue: GithubIssue -> executor.submit (Callable<GithubPullRequest> { getPr(issue, githubConfig) } ) }
         ?.map ( Future<GithubPullRequest>::get )
         ?.map { pr: GithubPullRequest ->

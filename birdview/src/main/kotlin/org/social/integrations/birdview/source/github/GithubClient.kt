@@ -40,7 +40,7 @@ class GithubClient(
             }
             ?: listOf<GithubIssue>()
 
-    fun getRepositoriesPullRequests(issueState: String, since: ZonedDateTime, user:String?):List<GithubIssue> =
+    fun getPullRequestIssues(issueState: String, since: ZonedDateTime, user:String?):List<GithubIssue> =
         findIssues(GithubIssuesFilter(
             prState = issueState,
             since = since,

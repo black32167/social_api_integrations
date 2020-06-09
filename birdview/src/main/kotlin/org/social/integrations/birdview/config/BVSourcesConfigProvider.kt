@@ -16,6 +16,9 @@ class BVSourcesConfigProvider(
                     .map { configClass.cast(it) }
                     .toList()
 
+    fun <T: BVAbstractSourceConfig> getConfigOfType(configClass: Class<T>): T? =
+            getConfigsOfType(configClass).firstOrNull()
+
     private fun getSourceConfigs(): Array<BVAbstractSourceConfig>
             = jsonDeserializer.deserialize(bvRuntimeConfig.sourcesConfigFileName)
 
@@ -30,7 +33,8 @@ class BVSourcesConfigProvider(
 @JsonSubTypes(
     JsonSubTypes.Type(value = BVJiraConfig::class, name = "jira"),
     JsonSubTypes.Type(value = BVTrelloConfig::class, name = "trello"),
-    JsonSubTypes.Type(value = BVGithubConfig::class, name = "github")
+    JsonSubTypes.Type(value = BVGithubConfig::class, name = "github"),
+    JsonSubTypes.Type(value = BVGoogleConfig::class, name = "google")
 )
 abstract class BVAbstractSourceConfig (
         val sourceType: String,
@@ -57,3 +61,12 @@ class BVGithubConfig (
         val user: String,
         val token: String
 ): BVAbstractSourceConfig("github", sourceName)
+
+class BVGoogleConfig (
+        sourceName: String = "google",
+        val clientId: String,
+        val clientSecret: String
+): BVAbstractSourceConfig("google", sourceName) {
+    val authorizationCodeListingPort = 8082
+    val redirectUri = "http://localhost:${authorizationCodeListingPort}"
+}

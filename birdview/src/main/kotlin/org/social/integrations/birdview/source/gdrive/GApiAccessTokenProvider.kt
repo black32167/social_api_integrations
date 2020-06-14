@@ -1,6 +1,6 @@
 package org.social.integrations.birdview.source.gdrive
 
-import org.social.integrations.birdview.config.BVGoogleConfig
+import org.social.integrations.birdview.config.BVGDriveConfig
 import org.social.integrations.tools.WebTargetFactory
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -17,11 +17,11 @@ class GApiAccessTokenProvider(
         private val refreshTokenFile = Paths.get("/tmp/birdview/gapir")
     }
 
-    fun getToken(config: BVGoogleConfig, scope:String): String? = loadLocalRefreshToken()
+    fun getToken(config: BVGDriveConfig, scope:String): String? = loadLocalRefreshToken()
             ?.let { refreshToken-> getRemoteAccessToken(refreshToken, config) }
             ?: getRemoteAccessToken(config, scope)
 
-    private fun getRemoteAccessToken(config: BVGoogleConfig, scope:String): String =
+    private fun getRemoteAccessToken(config: BVGDriveConfig, scope:String): String =
             authorizationCodeProvider.getAuthCode(config, scope)
                     ?.let { authCode -> getTokensResponse(authCode, config) }
                     ?.also { it.refresh_token?.also(this::saveRefreshToken) }
@@ -39,7 +39,7 @@ class GApiAccessTokenProvider(
                 Files.readAllLines(refreshTokenFile).firstOrNull()
             else null
 
-    private fun getTokensResponse(authCode: String, config: BVGoogleConfig): GAccessTokenResponse? =
+    private fun getTokensResponse(authCode: String, config: BVGDriveConfig): GAccessTokenResponse? =
         WebTargetFactory(tokenExchangeUrl)
                 .getTarget("")
                 .request()
@@ -51,7 +51,7 @@ class GApiAccessTokenProvider(
                 }
                 .readEntity(GAccessTokenResponse::class.java)
 
-    private fun getRemoteAccessToken(refreshToken: String, config: BVGoogleConfig): String =
+    private fun getRemoteAccessToken(refreshToken: String, config: BVGDriveConfig): String =
             WebTargetFactory(tokenExchangeUrl)
                     .getTarget("")
                     .request()
@@ -64,7 +64,7 @@ class GApiAccessTokenProvider(
                     .readEntity(GAccessTokenResponse::class.java)
                     .access_token
 
-    private fun getTokenExchangeFormEntity(authCode:String, config: BVGoogleConfig) =
+    private fun getTokenExchangeFormEntity(authCode:String, config: BVGDriveConfig) =
         Entity.form(Form()
                 .param("client_id", config.clientId)
                 .param("client_secret", config.clientSecret)
@@ -73,7 +73,7 @@ class GApiAccessTokenProvider(
                 .param("grant_type", "authorization_code")
                 .param("redirect_uri", config.redirectUri))
 
-    private fun getTokenRefreshFormEntity(refreshToken:String, config: BVGoogleConfig) =
+    private fun getTokenRefreshFormEntity(refreshToken:String, config: BVGDriveConfig) =
             Entity.form(Form()
                     .param("client_id", config.clientId)
                     .param("client_secret", config.clientSecret)

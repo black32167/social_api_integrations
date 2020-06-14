@@ -4,7 +4,7 @@ import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.Request
 import org.glassfish.grizzly.http.server.Response
-import org.social.integrations.birdview.config.BVGoogleConfig
+import org.social.integrations.birdview.config.BVGDriveConfig
 import java.awt.Desktop
 import java.net.URI
 import java.util.concurrent.CompletableFuture
@@ -20,7 +20,7 @@ class GApiAuthorizationCodeProvider {
 
     private val timeoutMs = 99999999L//5000L
 
-    fun getAuthCode(config: BVGoogleConfig, scope:String):String? {
+    fun getAuthCode(config: BVGDriveConfig, scope:String):String? {
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             return null
         }

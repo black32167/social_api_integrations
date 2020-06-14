@@ -34,7 +34,7 @@ class BVSourcesConfigProvider(
     JsonSubTypes.Type(value = BVJiraConfig::class, name = "jira"),
     JsonSubTypes.Type(value = BVTrelloConfig::class, name = "trello"),
     JsonSubTypes.Type(value = BVGithubConfig::class, name = "github"),
-    JsonSubTypes.Type(value = BVGoogleConfig::class, name = "google")
+    JsonSubTypes.Type(value = BVGDriveConfig::class, name = "gdrive")
 )
 abstract class BVAbstractSourceConfig (
         val sourceType: String,
@@ -62,11 +62,11 @@ class BVGithubConfig (
         val token: String
 ): BVAbstractSourceConfig("github", sourceName)
 
-class BVGoogleConfig (
-        sourceName: String = "google",
+class BVGDriveConfig (
+        sourceName: String = "gdrive",
         val clientId: String,
         val clientSecret: String
-): BVAbstractSourceConfig("google", sourceName) {
+): BVAbstractSourceConfig("gdrive", sourceName) {
     val authorizationCodeListingPort = 8082
     val redirectUri = "http://localhost:${authorizationCodeListingPort}"
 }

@@ -84,7 +84,7 @@ class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
                     }
                 }
             } else {
-                group.subDocuments.first().also { task->
+                group.subDocuments.firstOrNull()?.also { task->
                     println(describe(task))
                 }
             }

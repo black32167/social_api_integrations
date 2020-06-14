@@ -5,4 +5,5 @@ import org.social.integrations.birdview.request.TasksRequest
 
 interface BVTaskSource {
     fun getTasks(request: TasksRequest):List<BVDocument>
+    fun getType(): String
 }

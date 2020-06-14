@@ -53,6 +53,8 @@ class GithubTaskService(
         }
         ?: listOf()
 
+    override fun getType() = "github"
+
     private fun getPr(issue: GithubIssue, githubConfig:BVGithubConfig): GithubPullRequest? =
             issue.pull_request?.url
                     ?.let { url -> githubClientProvider.getGithubClient(githubConfig).getPullRequest(url) }

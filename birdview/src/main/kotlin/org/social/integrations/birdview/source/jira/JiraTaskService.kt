@@ -50,6 +50,9 @@ class JiraTaskService(
         return tasks
     }
 
+    override fun getType() = "jira"
+
+
     private fun extractGroupIds(issue: JiraIssue, sourceName: String): Set<BVDocumentId> =
             (issue.fields.customfield_10007?.let { setOf(BVDocumentId(it, JIRA_KEY_TYPE, sourceName)) } ?: emptySet<BVDocumentId>()) +
                     (issue.fields.parent?.let{ setOf(BVDocumentId(it.key, JIRA_KEY_TYPE, sourceName)) } ?: emptySet<BVDocumentId>())

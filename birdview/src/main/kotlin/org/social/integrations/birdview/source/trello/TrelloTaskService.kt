@@ -61,6 +61,9 @@ class TrelloTaskService(
         return tasks
     }
 
+    override fun getType() = "trello"
+
+
     private fun extractIds(card: TrelloCard, sourceName: String): Set<BVDocumentId> =
             setOf(
                     BVDocumentId( id = card.id, type = TRELLO_CARD_ID_TYPE, sourceName = sourceName),

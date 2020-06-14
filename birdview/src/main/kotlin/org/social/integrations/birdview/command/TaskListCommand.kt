@@ -1,6 +1,5 @@
 package org.social.integrations.birdview.command
 
-import org.social.integrations.birdview.GroupDescriber
 import org.social.integrations.birdview.analysis.BVDocument
 import org.social.integrations.birdview.api.BVTaskService
 import org.social.integrations.birdview.request.TasksRequest
@@ -16,12 +15,15 @@ import java.util.concurrent.Callable
 
 @CommandLine.Command(name = "list", mixinStandardHelpOptions = true,
         description = ["Lists tasks."])
-class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupDescriber) : Callable<Int> {
+class TaskListCommand(val taskService: BVTaskService) : Callable<Int> {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd")
             .also { it.timeZone = TimeZone.getTimeZone("UTC") }
 
     @CommandLine.Option(names = ["-s", "--status"], description = ["any|progress|todo|done"])
     var status = "progress"
+
+    @CommandLine.Option(names = ["-t", "--type"], description = ["filter by the source type"])
+    var sourceType:String? = null
 
     @CommandLine.Option(names = ["-n", "--noColors"], description = ["Disable ANSI colors"])
     var noColors = false
@@ -52,7 +54,8 @@ class TaskListCommand(val taskService: BVTaskService, val groupDescriber: GroupD
                 grouping = !noGrouping,
                 groupingThreshold = groupingThreshold,
                 since = sinceDateTime,
-                user = user
+                user = user,
+                sourceType = sourceType
                 ))
 
         println("Listing work in '${bold(BVColorUtils.red(status))}' state.")

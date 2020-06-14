@@ -5,10 +5,6 @@ import org.social.integrations.birdview.analysis.BVDocument
 import org.social.integrations.birdview.analysis.BVDocumentId
 import org.social.integrations.birdview.request.TasksRequest
 import org.social.integrations.birdview.source.BVTaskSource
-import org.social.integrations.birdview.source.gdrive.GDriveTaskService
-import org.social.integrations.birdview.source.github.GithubTaskService
-import org.social.integrations.birdview.source.jira.JiraTaskService
-import org.social.integrations.birdview.source.trello.TrelloTaskService
 import org.social.integrations.birdview.utils.BVConcurrentUtils
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -18,17 +14,13 @@ import javax.inject.Named
 @Named
 class BVTaskService(
         private val groupDescriber: GroupDescriber,
-        private var jira: JiraTaskService,
-        private val trello: TrelloTaskService,
-        private val github: GithubTaskService,
-        private val gDrive: GDriveTaskService
+        private var sources: List<BVTaskSource>
 )  {
     private val executor = Executors.newFixedThreadPool(3, BVConcurrentUtils.getDaemonThreadFactory())
 
     fun getTaskGroups(request: TasksRequest): List<BVDocument> {
-        val sources = listOf<BVTaskSource>(gDrive, jira, trello, github)
-
         val docs:MutableList<BVDocument> = sources
+                .filter { filterSource(it, request) }
                 .map { source -> executor.submit(Callable<List<BVDocument>> { source.getTasks(request) }) }
                 .map { getSwallowException(it) }
                 .filterNotNull()
@@ -63,6 +55,10 @@ class BVTaskService(
 
         return groupedDocuments
     }
+
+    private fun filterSource(source: BVTaskSource, request: TasksRequest) =
+            request.sourceType ?.let { it == source.getType() }
+                    ?: true
 
     private fun <T> getSwallowException(future: Future<T>): T? {
         try {

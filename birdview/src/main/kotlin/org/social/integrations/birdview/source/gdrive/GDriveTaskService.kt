@@ -30,6 +30,8 @@ class GDriveTaskService(
                     }
                     ?:emptyList()
 
+    override fun getType() = "gdrive"
+
     private fun toBVDocument(file: GDriveFile, config: BVGoogleConfig) =
             BVDocument(
                         ids = setOf(BVDocumentId(id = file.id, type = GDRIVE_FILE_TYPE, sourceName = config.sourceName)),

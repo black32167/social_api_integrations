@@ -17,7 +17,7 @@
         <jersey.version>2.29</jersey.version>
         <social.api.version>0.0.1</social.api.version>
         <social.api.tools.version>1.0.0</social.api.tools.version>
-        <junit-version>4.8.1</junit-version>
+        <junit-version>4.13.1</junit-version>
         <lucene.version>8.5.1</lucene.version>
     </properties>
     <build>
